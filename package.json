@@ -9,6 +9,14 @@
   "keywords": ["mediawiki", "api", "mediawiki-api", "api-wrapper", "fandom"],
   "author": "Sidemen19",
   "license": "MIT",
+  "homepage": "https://github.com/Sidemen19/mediawiki.js",
+  "repository": {
+    "url": "https://github.com/Sidemen19/mediawiki.js"
+  },
+  "bugs": {
+    "url": "https://github.com/Sidemen19/mediawiki.js/issues",
+    "email": "lavyag01@gmail.com"
+  },
   "dependencies": {
     "got": "^11.8.0",
     "tough-cookie": "^4.0.0"
