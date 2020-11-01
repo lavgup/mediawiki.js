@@ -1,5 +1,5 @@
 {
-  "name": "mediawiki.js",
+  "name": "mw-api",
   "version": "1.0.0",
   "description": "A modern wrapper for the MediaWiki API.",
   "main": "src/index.js",
@@ -9,12 +9,12 @@
   "keywords": ["mediawiki", "api", "mediawiki-api", "api-wrapper", "fandom"],
   "author": "Sidemen19",
   "license": "MIT",
-  "homepage": "https://github.com/Sidemen19/mediawiki.js",
+  "homepage": "https://github.com/Sidemen19/mw-api",
   "repository": {
-    "url": "https://github.com/Sidemen19/mediawiki.js"
+    "url": "https://github.com/Sidemen19/mw-api"
   },
   "bugs": {
-    "url": "https://github.com/Sidemen19/mediawiki.js/issues",
+    "url": "https://github.com/Sidemen19/mw-api/issues",
     "email": "lavyag01@gmail.com"
   },
   "dependencies": {

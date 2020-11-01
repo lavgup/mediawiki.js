@@ -1,21 +1,21 @@
-# mediawiki.js
-mediawiki.js is a modern wrapper for the MediaWiki API, heavily inspired by [nodemw](https://github.com/macbre/nodemw).
+# mw-api
+mw-api is a modern wrapper for the MediaWiki API, heavily inspired by [nodemw](https://github.com/macbre/nodemw).
 
 ## Installation
 #### With pnpm (recommended)
-`pnpm add mediawiki.js`
+`pnpm add mw-api`
 
 #### With npm
-`npm install mediawiki.js`
+`npm install mw-api`
 
 #### With yarn
-`yarn add mediawiki.js`
+`yarn add mw-api`
 
 ## Usage
-mediawiki.js uses promises with async/await syntax instead of callbacks, like nodemw does.
+mw-api uses promises with async/await syntax instead of callbacks, like nodemw does.
 
 ### Initiating the client
-mediawiki.js requires a configuration object, containing the following things;
+mw-api requires a configuration object, containing the following things;
 * server (e.g. `https://en.wikipedia.org`)
 * path: path to `api.php` (e.g. `/w`)
     * this will resolve to `https://en.wikipedia.org/w/api.php`
@@ -24,7 +24,7 @@ mediawiki.js requires a configuration object, containing the following things;
 
 #### Example
 ```js
-const MediaWikiJS = require('mediawiki.js');
+const MediaWikiJS = require('mw-api');
 const bot = new MediaWikiJS({
     server: 'https://en.wikipedia.org',
     path: '/w',
@@ -34,9 +34,9 @@ const bot = new MediaWikiJS({
 ```
 
 #### Config file
-mediawiki.js can load the configuration from a config file, as well.
+mw-api can load the configuration from a config file, as well.
 ```js
-const MediaWikiJS = require('mediawiki.js');
+const MediaWikiJS = require('mw-api');
 const bot = new MediaWikiJS('./config.json');
 ```
 
@@ -46,7 +46,7 @@ All methods are internally documented using JSDoc, so you should just be able to
 #### Examples
 ##### Getting site statistics
 ```js
-const MediaWikiJS = require('mediawiki.js');
+const MediaWikiJS = require('mw-api');
 const bot = new MediaWikiJS('./config.json');
 
 (async () => {
@@ -59,7 +59,7 @@ const bot = new MediaWikiJS('./config.json');
 
 ##### Getting titles of all pages in a category
 ```js
-const MediaWikiJS = require('mediawiki.js');
+const MediaWikiJS = require('mw-api');
 const bot = new MediaWikiJS('./config.json');
 
 (async () => {
@@ -72,7 +72,7 @@ const bot = new MediaWikiJS('./config.json');
 
 ##### Editing a page
 ```js
-const MediaWikiJS = require('mediawiki.js');
+const MediaWikiJS = require('mw-api');
 const bot = new MediaWikiJS('./config.json');
 
 (async () => {
@@ -105,7 +105,7 @@ const bot = new MediaWikiJS('./config.json');
 
 ##### Deleting a page
 ```js
-const MediaWikiJS = require('mediawiki.js');
+const MediaWikiJS = require('mw-api');
 const bot = new MediaWikiJS('./config.json');
 
 (async () => {
@@ -113,14 +113,14 @@ const bot = new MediaWikiJS('./config.json');
 
     await bot.delete({
         title: 'Project:Sandbox',
-        reason: 'Testing mediawiki.js!'
+        reason: 'Testing mw-api!'
     });
 })();
 ```
 
 ##### Blocking a user
 ```js
-const MediaWikiJS = require('mediawiki.js');
+const MediaWikiJS = require('mw-api');
 const bot = new MediaWikiJS('./config.json');
 
 (async () => {
@@ -138,7 +138,7 @@ const bot = new MediaWikiJS('./config.json');
 
 ##### Protecting a page
 ```js
-const MediaWikiJS = require('mediawiki.js');
+const MediaWikiJS = require('mw-api');
 const bot = new MediaWikiJS('./config.json');
 
 (async () => {

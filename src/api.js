@@ -1,5 +1,5 @@
 const { get, post } = require('got');
-const MediaWikiJSError = require('./MediaWikiJSError');
+const MediaWikiJSError = require('./MWAPIError');
 
 class API {
     constructor(options) {
