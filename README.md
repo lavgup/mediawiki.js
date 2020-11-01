@@ -1,6 +1,16 @@
 # mediawiki.js
 mediawiki.js is a modern wrapper for the MediaWiki API, heavily inspired by [nodemw](https://github.com/macbre/nodemw).
 
+## Installation
+#### With pnpm (recommended)
+`pnpm add mediawiki.js`
+
+#### With npm
+`npm install mediawiki.js`
+
+#### With yarn
+`yarn add mediawiki.js`
+
 ## Usage
 mediawiki.js uses promises with async/await syntax instead of callbacks, like nodemw does.
 

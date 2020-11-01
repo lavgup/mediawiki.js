@@ -6,9 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": ["mediawiki", "api", "mediawiki-api", "api-wrapper", "fandom"],
+  "author": "Sidemen19",
+  "license": "MIT",
   "dependencies": {
     "got": "^11.8.0",
     "tough-cookie": "^4.0.0"
