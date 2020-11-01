@@ -1,7 +1,7 @@
 const API = require('./api');
 const { readFileSync } = require('fs');
 const { CookieJar } = require('tough-cookie');
-const MediaWikiJSError = require('./MWAPIError');
+const MediaWikiJSError = require('./MediaWikiJSError');
 
 class MediaWikiJS {
     constructor(options) {

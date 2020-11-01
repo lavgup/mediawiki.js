@@ -6,7 +6,7 @@ const messages = {
     NO_CONFIG: () => 'No configuration was provided.'
 };
 
-class MWAPIError extends Error {
+class MediaWikiJSError extends Error {
     constructor(key, ...args) {
         if (messages[key] == null) throw new TypeError(`Error key '${key}' does not exist`);
         const message = messages[key](...args);
@@ -20,4 +20,4 @@ class MWAPIError extends Error {
     }
 }
 
-module.exports = MWAPIError;
+module.exports = MediaWikiJSError;
