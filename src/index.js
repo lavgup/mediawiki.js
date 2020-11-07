@@ -160,21 +160,18 @@ class MediaWikiJS {
     }
 
     /**
-     * @param {string} title The title of the page to edit.
-     * @param {string} summary The summary of the edit.
-     * @param {{minor: boolean, text: string}|{minor: boolean, prependtext: string}|{minor: boolean, appendtext: string}} params Mandatory params for the edit.
+     * Main wrapper for editing pages.
+     * @param {object} params Mandatory params for the edit.
      * @returns {Promise<object>}
      */
-    async doEdit(title, summary, params) {
+    async doEdit(params) {
         const token = await this.getToken();
 
         return this.api.post({
             action: 'edit',
             bot: '',
             minor: params.minor || '',
-            title,
             ...params,
-            summary,
             token
         });
     }
@@ -188,7 +185,7 @@ class MediaWikiJS {
      * @returns {Promise<object>}
      */
     edit({ title, content, summary, minor = true }) {
-        return this.doEdit(title, summary, { text: content, minor: minor });
+        return this.doEdit({ title: title, text: content, summary: summary, minor: minor });
     }
 
     /**
@@ -200,7 +197,7 @@ class MediaWikiJS {
      * @returns {Promise<object>}
      */
     prepend({ title, content, summary, minor = true }) {
-        return this.doEdit(title, summary, { prependtext: content, minor: minor });
+        return this.doEdit({ title: title, prependtext: content, summary: summary, minor: minor });
     }
 
     /**
@@ -212,7 +209,17 @@ class MediaWikiJS {
      * @returns {Promise<object>}
      */
     append({ title, content, summary, minor = true }) {
-        return this.doEdit(title, summary, { appendtext: content, minor: minor });
+        return this.doEdit({ title: title, appendtext: content, summary: summary, minor: minor });
+    }
+
+    /**
+     * Undoes a revision.
+     * @param title string The title of the page of which revision to undo.
+     * @param revision number The revision to undo.
+     * @param summary string The summary of the edit.
+     */
+    undo({ title, revision, summary }) {
+        return this.doEdit({ title: title, undo: revision, summary: summary });
     }
 
     /**
