@@ -3,6 +3,10 @@ const { readFileSync } = require('fs');
 const { CookieJar } = require('tough-cookie');
 const MediaWikiJSError = require('./MediaWikiJSError');
 
+/**
+ * A MediaWikiJS object.
+ * @param {Object} options The configuration options.
+ */
 class MediaWikiJS {
     constructor(options) {
         if (typeof options === 'string') {
@@ -29,16 +33,20 @@ class MediaWikiJS {
         this.path = options.path;
         this.botUsername = options.botUsername;
         this.botPassword = options.botPassword;
+        this.accountUsername = options.accountUsername;
+        this.accountPassword = options.accountPassword;
+        this.wikiId = options.wikiId;
 
         this.jar = new CookieJar();
         this.api = new API({ ...options, jar: this.jar });
 
         this.API_LIMIT = 5000;
+        this.DISCUSSIONS_BASE_URL = `https://services.fandom.com/discussion/${this.wikiId}`;
     }
 
     /**
      * Logs in to a wiki bot.
-     * @returns Promise<object>
+     * @returns {Promise<object>} The successful login object.
      */
     async login() {
         const initialReq = await this.api.post({
@@ -74,7 +82,7 @@ class MediaWikiJS {
      * Gets only the page titles of a list and formats it into an array.
      * @param {object[]} array The array to get a list from.
      * @param {string} property The property of the page title in each object.
-     * @returns string[]
+     * @returns {string[]} The list of all titles.
      */
     getList(array, property = 'title') {
         const list = [];
@@ -86,7 +94,7 @@ class MediaWikiJS {
     /**
      * Gets pages in a category.
      * @param {string} category The category to get pages of.
-     * @param onlyTitles Whether to only list the page titles.
+     * @param {boolean} onlyTitles Whether to only list the page titles.
      * @returns {Promise<string[] | object[]>}
      */
     async getPagesInCategory(category, onlyTitles = false) {
@@ -161,7 +169,7 @@ class MediaWikiJS {
 
     /**
      * Main wrapper for editing pages.
-     * @param {object} params Mandatory params for the edit.
+     * @param {Object} params Mandatory params for the edit.
      * @returns {Promise<object>}
      */
     async doEdit(params) {
@@ -178,10 +186,11 @@ class MediaWikiJS {
 
     /**
      * Edits the contents of a page.
-     * @param {string} title The title of the page to edit.
-     * @param {string} content The content of the edit.
-     * @param {string} summary The summary of the edit.
-     * @param {boolean} minor Whether to mark the edit as minor.
+     * @param {Object} options The options for the edit.
+     * @param {string} options.title The title of the page to edit.
+     * @param {string} options.content The content of the edit.
+     * @param {string} options.summary The summary of the edit.
+     * @param {boolean} options.minor Whether to mark the edit as minor.
      * @returns {Promise<object>}
      */
     edit({ title, content, summary, minor = true }) {
@@ -189,11 +198,12 @@ class MediaWikiJS {
     }
 
     /**
-     * Prepends content to a page.
-     * @param {string} title The title of the page to edit.
-     * @param {string} content The content of the edit.
-     * @param {string} summary The summary of the edit.
-     * @param {boolean} minor Whether to mark the edit as minor.
+     * Appends content to a page.
+     * @param {Object} options The options for the edit.
+     * @param {string} options.title The title of the page to edit.
+     * @param {string} options.content The content of the edit.
+     * @param {string} options.summary The summary of the edit.
+     * @param {boolean} options.minor Whether to mark the edit as minor.
      * @returns {Promise<object>}
      */
     prepend({ title, content, summary, minor = true }) {
@@ -202,10 +212,11 @@ class MediaWikiJS {
 
     /**
      * Appends content to a page.
-     * @param {string} title The title of the page to edit.
-     * @param {string} content The content of the edit.
-     * @param {string} summary The summary of the edit.
-     * @param {boolean} minor Whether to mark the edit as minor.
+     * @param {Object} options The options for the edit.
+     * @param {string} options.title The title of the page to edit.
+     * @param {string} options.content The content of the edit.
+     * @param {string} options.summary The summary of the edit.
+     * @param {boolean} options.minor Whether to mark the edit as minor.
      * @returns {Promise<object>}
      */
     append({ title, content, summary, minor = true }) {
@@ -214,9 +225,10 @@ class MediaWikiJS {
 
     /**
      * Undoes a revision.
-     * @param title string The title of the page of which revision to undo.
-     * @param revision number The revision to undo.
-     * @param summary string The summary of the edit.
+     * @param {Object} options The options for the undo.
+     * @param {string} options.title The title of the page of which revision to undo.
+     * @param {string} options.revision The revision to undo.
+     * @param {string} options.summary The summary of the edit.
      */
     undo({ title, revision, summary }) {
         return this.doEdit({ title: title, undo: revision, summary: summary });
@@ -224,8 +236,9 @@ class MediaWikiJS {
 
     /**
      * Deletes a page.
-     * @param {string} title The title of the page to delete.
-     * @param {string} reason The reason for deleting the page.
+     * @param {Object} options The options for the deletion.
+     * @param {string} options.title The title of the page to delete.
+     * @param {string} options.reason The reason for deleting the page.
      * @returns {Promise<object>}
      */
     async delete({ title, reason = '' }) {
@@ -241,8 +254,9 @@ class MediaWikiJS {
 
     /**
      * Restore revisions of a deleted page.
-     * @param {string} title The title of the page to restore.
-     * @param {string} reason The reason for restoring this page.
+     * @param {Object} options The options for the deletion.
+     * @param {string} options.title The title of the page to restore.
+     * @param {string} options.reason The reason for restoring this page.
      * @returns {Promise<*>}
      */
     async restore({ title, reason = '' }) {
@@ -258,11 +272,12 @@ class MediaWikiJS {
 
     /**
      * Change the protection level of a page.
-     * @param {string} title The title of the page to modify the protection level of.
-     * @param {{edit: string | undefined, move: string | undefined}} protections The protections to set the page to.
-     * @param {string | undefined} expiry The expiry for the protection.
-     * @param {string} reason The reason for modifying the page's protection level.
-     * @param {boolean} cascade Whether to enable cascading protection.
+     * @param {Object} options The options for the protection.
+     * @param {string} options.title The title of the page to modify the protection level of.
+     * @param {{edit: string | undefined, move: string | undefined}} options.protections The protections to set the page to.
+     * @param {string | undefined} options.expiry The expiry for the protection.
+     * @param {string} options.reason The reason for modifying the page's protection level.
+     * @param {boolean} options.cascade Whether to enable cascading protection.
      * @returns {Promise<object>}
      */
     async protect({ title, protections, expiry, reason, cascade = false }) {
@@ -286,11 +301,12 @@ class MediaWikiJS {
 
     /**
      * Blocks a user.
-     * @param {string} user The username of the user to block.
-     * @param {string} expiry The expiry of the block.
-     * @param {reason} reason The reason for the block.
-     * @param {boolean} autoblock Whether to automatically block the last used IP address, and any subsequent IP addresses they try to login from.
-     * @param {boolean} reblock Whether to overwrite the existing block, if the user is already blocked.
+     * @param {Object} options The options for the block.
+     * @param {string} options.user The username of the user to block.
+     * @param {string} options.expiry The expiry of the block.
+     * @param {string} options.reason The reason for the block.
+     * @param {boolean} options.autoblock Whether to automatically block the last used IP address, and any subsequent IP addresses they try to login from.
+     * @param {boolean} options.reblock Whether to overwrite the existing block, if the user is already blocked.
      * @returns {Promise<object>}
      */
     async block({ user, expiry, reason, autoblock = true, reblock = false }) {
@@ -307,6 +323,13 @@ class MediaWikiJS {
         });
     }
 
+    /**
+     * Unblocks a user.
+     * @param {Object} options The options for the block.
+     * @param {string} options.user The username of the user to unblock.
+     * @param {string} options.reason The reason for the unblock.
+     * @returns {Promise<object>}
+     */
     async unblock({ user, reason }) {
         const token = await this.getToken();
 
@@ -340,9 +363,10 @@ class MediaWikiJS {
 
     /**
      * Sends an email to a user.
-     * @param {string} user The user to email.
-     * @param {string} subject The subject of the email.
-     * @param {string} content The content of the email.
+     * @param {Object} options The options for the email.
+     * @param {string} options.user The user to email.
+     * @param {string} options.subject The subject of the email.
+     * @param {string} options.content The content of the email.
      * @returns {Promise<object>}
      */
     async email({ user, subject, content }) {
@@ -404,9 +428,10 @@ class MediaWikiJS {
 
     /**
      * Moves a page.
-     * @param {string} from The page title to rename.
-     * @param {string} to The new page title.
-     * @param {string} reason The reason for moving this page.
+     * @param {Object} options The options for the move.
+     * @param {string} options.from The page title to rename.
+     * @param {string} options.to The new page title.
+     * @param {string} options.reason The reason for moving this page.
      * @returns {Promise<object>}
      */
     async move({ from, to, reason }) {
@@ -423,7 +448,7 @@ class MediaWikiJS {
 
     /**
      * Gets all images on the wiki.
-     * @param start
+     * @param {string} start The image title to start enumerating from.
      * @param {boolean} onlyTitles Whether to only list the image titles.
      * @returns {Promise<string[] | object[]>}
      */
@@ -440,10 +465,10 @@ class MediaWikiJS {
     }
 
     /**
-     *
+     * Gets all images from an article.
      * @param {string} page The page to get all its images from.
      * @param {boolean} onlyTitles Whether to only list the image titles.
-     * @param {object} options
+     * @param {object} options Any other options for the request.
      * @returns {Promise<string[] | object[]>}
      */
     async getImagesFromArticle(page, onlyTitles = false, options = {}) {
@@ -555,7 +580,7 @@ class MediaWikiJS {
     /**
      * Enumerate recent changes.
      * @param {string} start The timestamp to start enumerating from.
-     * @param onlyTitles Whether to only list the page titles.
+     * @param {boolean} onlyTitles Whether to only list the page titles.
      * @returns {Promise<string[] | object[]>}
      */
     async getRecentChanges(start = '', onlyTitles = false) {
@@ -573,7 +598,7 @@ class MediaWikiJS {
 
     /**
      * Return general information about the site.
-     * @param props Which information to get
+     * @param {string[] | string} props Which information to get
      * @returns {Promise<object>}
      */
     async getSiteInfo(props) {
@@ -597,7 +622,7 @@ class MediaWikiJS {
     }
 
     /**
-     * Get's the wiki's MediaWiki version.
+     * Gets the wiki's MediaWiki version.
      * @returns {Promise<string>}
      */
     async getMwVersion() {
@@ -612,11 +637,11 @@ class MediaWikiJS {
 
     /**
      * Returns a list of all pages from a query page.
-     * @param queryPage
-     * @param onlyTitles
+     * @param {string} queryPage
+     * @param {boolean} onlyTitles
      * @returns {Promise<string[] | object[]>}
      */
-    async getQueryPage(queryPage, onlyTitles) {
+    async getQueryPage(queryPage, onlyTitles = false) {
         const body = await this.api.get({
             action: 'query',
             list: 'querypage',
@@ -646,8 +671,8 @@ class MediaWikiJS {
 
     /**
      * Find all pages that link to the given page.
-     * @param page Title to search.
-     * @param onlyTitles Whether to only list the page titles.
+     * @param {string} page Title to search.
+     * @param {boolean} onlyTitles Whether to only list the page titles.
      * @returns {Promise<string[] | object[]>}
      */
     async getBackLinks(page, onlyTitles) {
@@ -663,6 +688,106 @@ class MediaWikiJS {
 
         if (onlyTitles) return this.getList(body.query.backlinks);
         return body.query.backlinks;
+    }
+
+    /**
+     * Gets Fandom cookies.
+     * @returns {Promise<Object>}
+     */
+    getFandomCookies() {
+        return this.api.postF('https://services.fandom.com/auth/token', {
+            form: {
+                username: this.accountUsername,
+                password: this.accountPassword
+            }
+        });
+    }
+
+    /**
+     * Posts to Fandom discussions.
+     * @param {Object} options The options for the post.
+     * @param {string} options.title The title of the post.
+     * @param {string} options.content The content of the post.
+     * @param {string} options.category The category to post in.
+     * @returns {Promise<Object>}
+     */
+    async post({ title, content, category = this.wikiId }) {
+        await this.getFandomCookies();
+
+        return this.api.postF(`${this.DISCUSSIONS_BASE_URL}/forums/${category}/threads`, {
+            body: JSON.stringify({
+                body: title,
+                jsonModel: JSON.stringify({
+                    type: 'doc',
+                    content: [
+                        {
+                            type: 'paragraph',
+                            content: [
+                                {
+                                    type: 'text',
+                                    text: content
+                                }
+                            ]
+                        }
+                    ]
+                }),
+                attachments: {
+                    'contentImages': [],
+                    'openGraphs': [],
+                    'atMentions': []
+                },
+                forumId: this.wikiId,
+                siteId: this.wikiId,
+                title: title,
+                source: 'DESKTOP_WEB_FEPO',
+                funnel: 'TEXT',
+                articleIds: []
+            })
+        });
+    }
+
+    /**
+     * Deletes a post on Fandom discussions.
+     * @param {string | number} id The ID of the post to delete.
+     * @returns {Promise<Object>}
+     */
+    async deletePost(id) {
+        await this.getFandomCookies();
+
+        return this.api.put(`${this.DISCUSSIONS_BASE_URL}/threads/${id}/delete`);
+    }
+
+    /**
+     * Undeletes a post on Fandom discussions.
+     * @param {string | number} id The ID of the post to undelete.
+     * @returns {Promise<Object>}
+     */
+    async undeletePost(id) {
+        await this.getFandomCookies();
+
+        return this.api.put(`${this.DISCUSSIONS_BASE_URL}/threads/${id}/undelete`);
+    }
+
+    /**
+     * Locks a post on Fandom discussions.
+     * @param {string | number} id The ID of the post to lock.
+     * @returns {Promise<Object>}
+     */
+    async lockPost(id) {
+        await this.getFandomCookies();
+
+        return this.api.put(`${this.DISCUSSIONS_BASE_URL}/threads/${id}/lock`);
+    }
+
+    /**
+     * Unlocks a post on Fandom discussions.
+     * @param {string | number} id The ID of the post to unlock.
+     * @returns {Promise<Object>}
+     */
+    async unlockPost(id) {
+        await this.getFandomCookies();
+
+        return this.api.delete(`${this.DISCUSSIONS_BASE_URL}/threads/${id}/lock`);
     }
 }
 

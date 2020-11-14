@@ -3,10 +3,17 @@
   "version": "1.1.0",
   "description": "A modern wrapper for the MediaWiki API.",
   "main": "src/index.js",
+  "types": "src/index.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": ["mediawiki", "api", "mediawiki-api", "api-wrapper", "fandom"],
+  "keywords": [
+    "mediawiki",
+    "api",
+    "mediawiki-api",
+    "api-wrapper",
+    "fandom"
+  ],
   "author": "Sidemen19",
   "license": "MIT",
   "homepage": "https://github.com/Sidemen19/mediawiki.js",
@@ -19,7 +26,8 @@
   },
   "dependencies": {
     "got": "^11.8.0",
-    "tough-cookie": "^4.0.0"
+    "tough-cookie": "^4.0.0",
+    "tsd-jsdoc": "^2.5.0"
   },
   "devDependencies": {
     "eslint": "^7.12.1"

@@ -1,4 +1,4 @@
-const { get, post } = require('got');
+const { get, post, put, delete: del } = require('got');
 const MediaWikiJSError = require('./MediaWikiJSError');
 
 class API {
@@ -6,6 +6,8 @@ class API {
         this.server = options.server;
         this.path = options.path;
         this.jar = options.jar;
+
+        this.wikiId = options.wikiId;
     }
 
     async get(params) {
@@ -48,6 +50,35 @@ class API {
         }
 
         return body;
+    }
+
+    async send(url, params, method) {
+        const { body } = await method(url, {
+            ...params,
+            cookieJar: this.jar
+        });
+
+        if (body && body.error) {
+            throw new MediaWikiJSError('MEDIAWIKI_ERROR', body.error.info);
+        }
+
+        try {
+            return JSON.parse(body);
+        } catch (err) {
+            return body;
+        }
+    }
+
+    postF(url, params) {
+        return this.send(url, params, post);
+    }
+
+    put(url, params) {
+        return this.send(url, params, put);
+    }
+
+    delete(url, params) {
+        return this.send(url, params, del);
     }
 }
 

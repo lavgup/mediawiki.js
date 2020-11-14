@@ -1,5 +1,5 @@
 # mediawiki.js
-mediawiki.js is a modern wrapper for the MediaWiki API, heavily inspired by [nodemw](https://github.com/macbre/nodemw).
+mediawiki.js is a modern wrapper for the MediaWiki API, heavily inspired by [nodemw](https://github.com/macbre/nodemw). It also supports posting, deleting, undeleting, locking and unlocking posts in Fandom's Discussions.
 
 ## Installation
 #### With pnpm (recommended)
@@ -29,7 +29,12 @@ const bot = new MediaWikiJS({
     server: 'https://en.wikipedia.org',
     path: '/w',
     botUsername: 'Username@Bot Username',
-    botPassword: ''
+    botPassword: '',
+    
+    // optional for fandom discussion support
+    accountUsername: '',
+    accountPassword: '',
+    wikiId: ''
 });
 ```
 
@@ -82,7 +87,7 @@ const bot = new MediaWikiJS('./config.json');
     // prepend content (add to start of page)
     await bot.prepend({
         title: 'Project:Sandbox',
-        content: 'Don\'t vandalise the sandbox!',
+        content: "Don't vandalise the sandbox!",
         summary: 'Add notice',
         minor: true
     });
