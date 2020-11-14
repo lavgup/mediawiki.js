@@ -742,7 +742,10 @@ class MediaWikiJS {
                 source: 'DESKTOP_WEB_FEPO',
                 funnel: 'TEXT',
                 articleIds: []
-            })
+            }),
+            headers: {
+                'Content-Type': 'application/json'
+            }
         });
     }
 
@@ -754,7 +757,11 @@ class MediaWikiJS {
     async deletePost(id) {
         await this.getFandomCookies();
 
-        return this.api.put(`${this.DISCUSSIONS_BASE_URL}/threads/${id}/delete`);
+        return this.api.put(`${this.DISCUSSIONS_BASE_URL}/threads/${id}/delete`, {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
     }
 
     /**
@@ -765,7 +772,11 @@ class MediaWikiJS {
     async undeletePost(id) {
         await this.getFandomCookies();
 
-        return this.api.put(`${this.DISCUSSIONS_BASE_URL}/threads/${id}/undelete`);
+        return this.api.put(`${this.DISCUSSIONS_BASE_URL}/threads/${id}/undelete`, {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
     }
 
     /**
@@ -776,7 +787,11 @@ class MediaWikiJS {
     async lockPost(id) {
         await this.getFandomCookies();
 
-        return this.api.put(`${this.DISCUSSIONS_BASE_URL}/threads/${id}/lock`);
+        return this.api.put(`${this.DISCUSSIONS_BASE_URL}/threads/${id}/lock`, {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
     }
 
     /**
@@ -787,7 +802,11 @@ class MediaWikiJS {
     async unlockPost(id) {
         await this.getFandomCookies();
 
-        return this.api.delete(`${this.DISCUSSIONS_BASE_URL}/threads/${id}/lock`);
+        return this.api.delete(`${this.DISCUSSIONS_BASE_URL}/threads/${id}/lock`, {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
     }
 }
 
