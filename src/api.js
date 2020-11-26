@@ -11,7 +11,7 @@ class API {
     }
 
     async get(params) {
-        const { body } = await get(`${this.server}/${this.path}api.php`, {
+        const { body } = await get(`${this.server}${this.path}/api.php`, {
             searchParams: {
                 ...params,
                 format: 'json'
