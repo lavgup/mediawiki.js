@@ -325,12 +325,11 @@ class MediaWikiJS {
 
     /**
      * Unblocks a user.
-     * @param {Object} options The options for the block.
-     * @param {string} options.user The username of the user to unblock.
-     * @param {string} options.reason The reason for the unblock.
+     * @param {string} user The username of the user to unblock.
+     * @param {string} reason The reason for the unblock.
      * @returns {Promise<object>}
      */
-    async unblock({ user, reason }) {
+    async unblock(user, reason ) {
         const token = await this.getToken();
 
         return this.api.post({
@@ -383,13 +382,14 @@ class MediaWikiJS {
 
     /**
      * Get all edits by a user.
-     * @param {string} user he users to retrieve contributions for.
-     * @param {string} start The start timestamp to return from.
-     * @param {string} namespace Only list contributions in these namespaces.
-     * @param {boolean} onlyTitles Whether to only list the page titles.
+     * @param {string} options The options for the request.
+     * @param {string} options.user The users to retrieve contributions for.
+     * @param {string} options.start The start timestamp to return from.
+     * @param {string} options.namespace Only list contributions in these namespaces.
+     * @param {boolean} options.onlyTitles Whether to only list the page titles.
      * @returns {Promise<string[]>}
      */
-    async getUserContribs(user, start, namespace = '', onlyTitles = false) {
+    async getUserContribs({ user, start, namespace = '', onlyTitles = false }) {
         const body = await this.api.get({
             action: 'query',
 			list: 'usercontribs',
@@ -466,17 +466,18 @@ class MediaWikiJS {
 
     /**
      * Gets all images from an article.
-     * @param {string} page The page to get all its images from.
-     * @param {boolean} onlyTitles Whether to only list the image titles.
-     * @param {object} options Any other options for the request.
+     * @param {object} options The options for the request.
+     * @param {string} options.page The page to get all its images from.
+     * @param {boolean} options.onlyTitles Whether to only list the image titles.
+     * @param {object} options.otherOptions Any other options for the request.
      * @returns {Promise<string[] | object[]>}
      */
-    async getImagesFromArticle(page, onlyTitles = false, options = {}) {
+    async getImagesFromArticle({ page, onlyTitles = false, otherOptions = {} }) {
         const body = await this.api.get({
 			action: 'query',
 			prop: 'images',
 			titles: page,
-            ...options
+            ...otherOptions
 		});
 
         const article = this.getFirstItem(body.query.pages);
