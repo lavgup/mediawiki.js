@@ -1,5 +1,5 @@
 # mediawiki.js
-mediawiki.js is a modern wrapper for the MediaWiki API, heavily inspired by [nodemw](https://github.com/macbre/nodemw). It also supports posting, deleting, undeleting, locking and unlocking posts in Fandom's Discussions.
+mediawiki.js is a modern wrapper for the MediaWiki API, heavily inspired by [nodemw](https://github.com/macbre/nodemw). It also supports posting, deleting, undeleting, locking and unlocking posts in Fandom's Discussions. This library's focus is modernness, so it includes TypeScript support.
 
 ## Installation
 #### With pnpm (recommended)
@@ -167,3 +167,8 @@ Open an issue!
 
 ## Contributing
 Open a PR! Might be worth opening an issue if it's a major commit, to get the heads up from me.
+
+## Todo
+* Cache some user data on initialisation.
+* Add a queue for all HTTP requests.
+* Write docs...even though they're pretty unnecessary looking at the code IMO, especially [index.d.ts](/src/index.d.ts). Might as well auto-generate them from the typings/JSDoc in the main file.

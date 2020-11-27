@@ -1,11 +1,18 @@
-const API = require('./api');
+const API = require('./API');
 const { readFileSync } = require('fs');
 const { CookieJar } = require('tough-cookie');
 const MediaWikiJSError = require('./MediaWikiJSError');
 
 /**
  * A MediaWikiJS object.
- * @param {Object} options The configuration options.
+ * @param {object} options The configuration options.
+ * @param {string} options.server The server of the wiki.
+ * @param {string} options.path The path to the api.php file.
+ * @param {string} [options.botUsername] The bot's bot username, obtained from Special:BotPasswords.
+ * @param {string} [options.botPassword] The bot's bot password, obtained from Special:BotPasswords.
+ * @param {string} [options.accountUsername] The bot's account username, used for Fandom discussion support.
+ * @param {string} [options.accountPassword] The bot's account password, used for Fandom discussion support.
+ * @param {string} [options.wikiId] The wiki's ID, used for Fandom discussion support.
  */
 class MediaWikiJS {
     constructor(options) {
@@ -38,7 +45,10 @@ class MediaWikiJS {
         this.wikiId = options.wikiId;
 
         this.jar = new CookieJar();
-        this.api = new API({ ...options, jar: this.jar });
+        this.api = new API({
+            ...options,
+            jar: this.jar
+        });
 
         this.API_LIMIT = 5000;
         this.DISCUSSIONS_BASE_URL = `https://services.fandom.com/discussion/${this.wikiId}`;

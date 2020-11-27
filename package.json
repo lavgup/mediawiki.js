@@ -1,6 +1,6 @@
 {
   "name": "@sidemen19/mediawiki.js",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "A modern wrapper for the MediaWiki API.",
   "main": "src/index.js",
   "types": "src/index.d.ts",

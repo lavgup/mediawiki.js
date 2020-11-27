@@ -1,9 +1,24 @@
 /**
  * A MediaWikiJS object.
  * @param options - The configuration options.
+ * @param options.server - The server of the wiki.
+ * @param options.path - The path to the api.php file.
+ * @param [options.botUsername] - The bot's bot username, obtained from Special:BotPasswords.
+ * @param [options.botPassword] - The bot's bot password, obtained from Special:BotPasswords.
+ * @param [options.accountUsername] - The bot's account username, used for Fandom discussion support.
+ * @param [options.accountPassword] - The bot's account password, used for Fandom discussion support.
+ * @param [options.wikiId] - The wiki's ID, used for Fandom discussion support.
  */
 declare class MediaWikiJS {
-    constructor(options: object);
+    constructor(options: {
+        server: string;
+        path: string;
+        botUsername?: string;
+        botPassword?: string;
+        accountUsername?: string;
+        accountPassword?: string;
+        wikiId?: string;
+    });
     /**
      * Logs in to a wiki bot.
      * @returns The successful login object.
@@ -153,14 +168,10 @@ declare class MediaWikiJS {
     }): Promise<object>;
     /**
      * Unblocks a user.
-     * @param options - The options for the block.
-     * @param options.user - The username of the user to unblock.
-     * @param options.reason - The reason for the unblock.
+     * @param user - The username of the user to unblock.
+     * @param reason - The reason for the unblock.
      */
-    unblock(options: {
-        user: string;
-        reason: string;
-    }): Promise<object>;
+    unblock(user: string, reason: string): Promise<object>;
     /**
      * Purges the cache of a list of pages.
      * @param titles - The title(s) of the pages to delete.
@@ -180,12 +191,18 @@ declare class MediaWikiJS {
     }): Promise<object>;
     /**
      * Get all edits by a user.
-     * @param user - he users to retrieve contributions for.
-     * @param start - The start timestamp to return from.
-     * @param namespace - Only list contributions in these namespaces.
-     * @param onlyTitles - Whether to only list the page titles.
+     * @param options - The options for the request.
+     * @param options.user - The users to retrieve contributions for.
+     * @param options.start - The start timestamp to return from.
+     * @param options.namespace - Only list contributions in these namespaces.
+     * @param options.onlyTitles - Whether to only list the page titles.
      */
-    getUserContribs(user: string, start: string, namespace: string, onlyTitles: boolean): Promise<string[]>;
+    getUserContribs(options: {
+        user: string;
+        start: string;
+        namespace: string;
+        onlyTitles: boolean;
+    }): Promise<string[]>;
     /**
      * Creates a new account.
      */
@@ -210,11 +227,16 @@ declare class MediaWikiJS {
     getImages(start: string, onlyTitles: boolean): Promise<string[] | object[]>;
     /**
      * Gets all images from an article.
-     * @param page - The page to get all its images from.
-     * @param onlyTitles - Whether to only list the image titles.
-     * @param options - Any other options for the request.
+     * @param options - The options for the request.
+     * @param options.page - The page to get all its images from.
+     * @param options.onlyTitles - Whether to only list the image titles.
+     * @param options.otherOptions - Any other options for the request.
      */
-    getImagesFromArticle(page: string, onlyTitles: boolean, options: any): Promise<string[] | object[]>;
+    getImagesFromArticle(options: {
+        page: string;
+        onlyTitles: boolean;
+        otherOptions: any;
+    }): Promise<string[] | object[]>;
     /**
      * Find all pages that use the given image title.
      * @param fileName - Title to search
