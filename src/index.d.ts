@@ -25,6 +25,10 @@ declare class MediaWikiJS {
      */
     login(): Promise<object>;
     /**
+     * Logs out of a wiki bot, by removing all cookies.
+     */
+    logout(): void;
+    /**
      * @param object - The object to get the first item of.
      */
     getFirstItem(object: any): object[];

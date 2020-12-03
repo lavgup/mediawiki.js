@@ -80,6 +80,13 @@ class MediaWikiJS {
     }
 
     /**
+     * Logs out of a wiki bot, by removing all cookies.
+     */
+    logout() {
+        this.jar.removeAllCookies();
+    }
+
+    /**
      * @param {object} object The object to get the first item of.
      * @returns {object[]}
      */
