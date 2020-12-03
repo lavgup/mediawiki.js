@@ -1,6 +1,5 @@
 const API = require('./API');
 const { readFileSync } = require('fs');
-const { CookieJar } = require('tough-cookie');
 const MediaWikiJSError = require('./MediaWikiJSError');
 
 /**
@@ -19,7 +18,6 @@ class MediaWikiJS {
     #path
     #fandomUsername
     #fandomPassword
-    #jar
     #DISCUSSIONS_BASE_URL
     #updateCache
     constructor(options) {
@@ -49,11 +47,8 @@ class MediaWikiJS {
         this.#fandomPassword = options.accountPassword;
         this.wikiId = options.wikiId;
 
-        this.#jar = new CookieJar();
-        this.api = new API({
-            ...options,
-            jar: this.#jar
-        });
+        
+        this.api = new API(options);
 
         // Expose API_LIMIT publicly
         this.API_LIMIT = 5000;
@@ -110,10 +105,11 @@ class MediaWikiJS {
     }
 
     /**
-     * Logs out of a wiki bot, by removing all cookies.
+     * Logs out of a wiki bot.
+     * API removes cookies and resets mwToken.
      */
     logout() {
-        return this.#jar.removeAllCookiesSync();
+        return this.api.logout()
     }
 
     /**

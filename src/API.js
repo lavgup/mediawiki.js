@@ -1,12 +1,15 @@
 const { get, post, put, delete: del } = require('got');
+const { CookieJar } = require('tough-cookie');
+
 const MediaWikiJSError = require('./MediaWikiJSError');
 
 class API {
     #mwToken
+    #jar
     constructor(options) {
         this.server = options.server;
         this.path = options.path;
-        this.jar = options.jar;
+        this.#jar = new CookieJar();
         this.#mwToken = '+\\';
         this.wikiId = options.wikiId;
     }
@@ -14,7 +17,7 @@ class API {
         if (typeof method !== 'string') throw Error("Critical Error in MW.js Library");
         const payload = {
             responseType: 'json',
-            cookieJar: this.jar
+            cookieJar: this.#jar
         };
         const payloadType = (method==='post'?'form':'searchParams');
         payload[payloadType] = {
@@ -38,8 +41,11 @@ class API {
             }
             throw new MediaWikiJSError('MEDIAWIKI_ERROR', body.error.info);
         }
-
         return body;
+    }
+    logout() {
+        this.#mwToken = '+\\';
+        return this.#jar.removeAllCookiesSync();
     }
     get(params,csrf) {
         return this.#mw(params, csrf, 'get');
@@ -52,7 +58,7 @@ class API {
     async #discuss(url, params, method) {
         const { body } = await method(url, {
             ...params,
-            cookieJar: this.jar
+            cookieJar: this.#jar
         });
 
         if (body && body.error) {
