@@ -16,12 +16,13 @@ class API {
             responseType: 'json',
             cookieJar: this.jar
         };
-        payload[(method==='post'?'json':'searchParams')] = {
+        const payloadType = (method==='post'?'form':'searchParams');
+        payload[payloadType] = {
             ...params,
             format: 'json'
         };
         // Add csrf
-        if (csrf) payload[(method==='post'?'json':'searchParam')].token = this.#mwToken;
+        if (csrf) payload[payloadType].token = this.#mwToken;
 
         const { body } = await (method==='post'?post:get)(`${this.server + this.path}/api.php`, payload);
         if (!body) {
@@ -29,15 +30,15 @@ class API {
         }
 
         if (body.error) {
+            // CSRF Catch
+            if (body.error?.code === 'badtoken') {
+                const tokenPack = await this.get({action:'query',meta:'tokens',type: 'csrf'});
+                this.#mwToken = tokenPack.query.tokens.csrftoken;
+                return this.#mw(params, csrf, method);
+            }
             throw new MediaWikiJSError('MEDIAWIKI_ERROR', body.error.info);
         }
 
-        if (body?.error?.code === 'badtoken') {
-            this.#mwToken = await this.get({action:'query',meta:'tokens',type: 'csrf'});
-            // Can be A Recursive Nightmare? It shouldn't be...
-            const { backup } = await this.mw(params, csrf, method);
-            return backup;
-        }
         return body;
     }
     get(params,csrf) {
