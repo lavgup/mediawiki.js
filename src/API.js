@@ -4,10 +4,11 @@ const { CookieJar } = require('tough-cookie');
 const MediaWikiJSError = require('./MediaWikiJSError');
 
 class API {
-    #mwToken
-    #jar
-    #server
-    #path
+    #mwToken;
+    #jar;
+    #server;
+    #path;
+
     constructor(options) {
         this.#server = options.server;
         this.#path = options.path;
@@ -16,18 +17,21 @@ class API {
         this.#jar = new CookieJar();
         this.#mwToken = '+\\';
     }
+
     setServer(server,path){
         this.#server = server;
         this.#path = path;
         this.logout();
         return this;
     }
-    async #mw(params, csrf, method){
-        if (typeof method !== 'string') throw Error("Critical Error in MW.js Library");
+
+    async #mw(params, csrf, method) {
+        if (typeof method !== 'string') throw Error('Critical Error in MW.js Library');
         const payload = {
             responseType: 'json',
             cookieJar: this.#jar
         };
+
         const payloadType = (method==='post'?'form':'searchParams');
         payload[payloadType] = {
             ...params,
@@ -37,7 +41,7 @@ class API {
         // Add csrf
         if (csrf) payload[payloadType].token = this.#mwToken;
 
-        const { body } = await (method==='post'?post:get)(`${this.#server + this.#path}/api.php`, payload);
+        const { body } = await (method === 'post' ? post : get)(`${this.#server + this.#path}/api.php`, payload);
         if (!body) {
             throw new MediaWikiJSError('MEDIAWIKI_ERROR', 'Request did not return a body');
         }
@@ -45,59 +49,43 @@ class API {
         if (body.error) {
             // CSRF Catch
             if (body.error?.code === 'badtoken') {
-                let tokenPack = await this.get({action:'query',meta:'tokens',type: 'csrf'});
-                if (tokenPack?.query?.tokens?.csrftoken)
+                let tokenPack = await this.get({
+                    action: 'query',
+                    meta:'tokens',
+                    type: 'csrf'
+                });
+
+                if (tokenPack?.query?.tokens?.csrftoken) {
                     this.#mwToken = tokenPack.query.tokens.csrftoken;
-                else {
+                } else {
                     // MW 1.19 support
-                    tokenPack = await this.get({action:'query',prop:'info',intoken: 'edit',titles:'F'});
+                    tokenPack = await this.get({
+                        action: 'query',
+                        prop: 'info',
+                        intoken: 'edit',
+                        titles: 'F'
+                    });
                     this.#mwToken = Object.values(tokenPack.query.pages)[0].edittoken;
                 }
+
                 return this.#mw(params, csrf, method);
             }
             throw new MediaWikiJSError('MEDIAWIKI_ERROR', body.error.info);
         }
         return body;
     }
+
     logout() {
         this.#mwToken = '+\\';
         return this.#jar.removeAllCookiesSync();
     }
+
     get(params,csrf) {
         return this.#mw(params, csrf, 'get');
     }
 
     post(params,csrf) {
         return this.#mw(params, csrf, 'post');
-    }
-
-    async #discuss(url, params, method) {
-        const { body } = await method(url, {
-            ...params,
-            cookieJar: this.#jar
-        });
-
-        if (body && body.error) {
-            throw new MediaWikiJSError('MEDIAWIKI_ERROR', body.error.info);
-        }
-
-        try {
-            return JSON.parse(body);
-        } catch (err) {
-            return body;
-        }
-    }
-
-    postF(url, params) {
-        return this.#discuss(url, params, post);
-    }
-
-    putF(url, params) {
-        return this.#discuss(url, params, put);
-    }
-
-    deleteF(url, params) {
-        return this.#discuss(url, params, del);
     }
 }
 

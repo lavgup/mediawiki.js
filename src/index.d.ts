@@ -5,9 +5,6 @@
  * @param options.path - The path to the api.php file.
  * @param [options.botUsername] - The bot's bot username, obtained from Special:BotPasswords.
  * @param [options.botPassword] - The bot's bot password, obtained from Special:BotPasswords.
- * @param [options.accountUsername] - The bot's account username, used for Fandom discussion support.
- * @param [options.accountPassword] - The bot's account password, used for Fandom discussion support.
- * @param [options.wikiId] - The wiki's ID, used for Fandom discussion support.
  */
 declare class MediaWikiJS {
     constructor(options: {
@@ -15,9 +12,6 @@ declare class MediaWikiJS {
         path: string;
         botUsername?: string;
         botPassword?: string;
-        accountUsername?: string;
-        accountPassword?: string;
-        wikiId?: string;
     });
     /**
      * Logs in to a wiki bot.
@@ -25,7 +19,8 @@ declare class MediaWikiJS {
      */
     login(): Promise<object>;
     /**
-     * Logs out of a wiki bot, by removing all cookies.
+     * Logs out of a wiki bot.
+    API removes cookies and resets mwToken.
      */
     logout(): void;
     /**
@@ -55,10 +50,6 @@ declare class MediaWikiJS {
      * @param onlyTitles - Whether to only list the page titles.
      */
     search(keyword: string, onlyTitles: boolean): Promise<string[] | object[]>;
-    /**
-     * Get's a CSRF token.
-     */
-    getToken(): Promise<string>;
     /**
      * Main wrapper for editing pages.
      * @param params - Mandatory params for the edit.
@@ -303,41 +294,5 @@ declare class MediaWikiJS {
      * @param onlyTitles - Whether to only list the page titles.
      */
     getBackLinks(page: string, onlyTitles: boolean): Promise<string[] | object[]>;
-    /**
-     * Gets Fandom cookies.
-     */
-    getFandomCookies(): Promise<object>;
-    /**
-     * Posts to Fandom discussions.
-     * @param options - The options for the post.
-     * @param options.title - The title of the post.
-     * @param options.content - The content of the post.
-     * @param options.category - The category to post in.
-     */
-    post(options: {
-        title: string;
-        content: string;
-        category: string;
-    }): Promise<object>;
-    /**
-     * Deletes a post on Fandom discussions.
-     * @param id - The ID of the post to delete.
-     */
-    deletePost(id: string | number): Promise<object>;
-    /**
-     * Undeletes a post on Fandom discussions.
-     * @param id - The ID of the post to undelete.
-     */
-    undeletePost(id: string | number): Promise<object>;
-    /**
-     * Locks a post on Fandom discussions.
-     * @param id - The ID of the post to lock.
-     */
-    lockPost(id: string | number): Promise<object>;
-    /**
-     * Unlocks a post on Fandom discussions.
-     * @param id - The ID of the post to unlock.
-     */
-    unlockPost(id: string | number): Promise<object>;
 }
 

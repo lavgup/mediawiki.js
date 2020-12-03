@@ -8,7 +8,7 @@ const messages = {
 
 class MediaWikiJSError extends Error {
     constructor(key, ...args) {
-        if (messages[key] == null) throw new TypeError(`Error key '${key}' does not exist`);
+        if (messages[key] == null) throw new TypeError(`Error - key '${key}' does not exist`);
         const message = messages[key](...args);
 
         super(message);
