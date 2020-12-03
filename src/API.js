@@ -1,61 +1,80 @@
 const { get, post, put, delete: del } = require('got');
+const { CookieJar } = require('tough-cookie');
+
 const MediaWikiJSError = require('./MediaWikiJSError');
 
 class API {
+    #mwToken
+    #jar
+    #server
+    #path
     constructor(options) {
-        this.server = options.server;
-        this.path = options.path;
-        this.jar = options.jar;
-
+        this.#server = options.server;
+        this.#path = options.path;
         this.wikiId = options.wikiId;
+
+        this.#jar = new CookieJar();
+        this.#mwToken = '+\\';
     }
-
-    async get(params) {
-        const { body } = await get(`${this.server + this.path}/api.php`, {
-            searchParams: {
-                ...params,
-                format: 'json'
-            },
+    setServer(server,path){
+        this.#server = server;
+        this.#path = path;
+        this.logout();
+        return this;
+    }
+    async #mw(params, csrf, method){
+        if (typeof method !== 'string') throw Error("Critical Error in MW.js Library");
+        const payload = {
             responseType: 'json',
-            cookieJar: this.jar
-        });
+            cookieJar: this.#jar
+        };
+        const payloadType = (method==='post'?'form':'searchParams');
+        payload[payloadType] = {
+            ...params,
+            format: 'json',
+            formatversion: 2
+        };
+        // Add csrf
+        if (csrf) payload[payloadType].token = this.#mwToken;
 
+        const { body } = await (method==='post'?post:get)(`${this.#server + this.#path}/api.php`, payload);
         if (!body) {
             throw new MediaWikiJSError('MEDIAWIKI_ERROR', 'Request did not return a body');
         }
 
         if (body.error) {
+            // CSRF Catch
+            if (body.error?.code === 'badtoken') {
+                let tokenPack = await this.get({action:'query',meta:'tokens',type: 'csrf'});
+                if (tokenPack?.query?.tokens?.csrftoken)
+                    this.#mwToken = tokenPack.query.tokens.csrftoken;
+                else {
+                    // MW 1.19 support
+                    tokenPack = await this.get({action:'query',prop:'info',intoken: 'edit',titles:'F'});
+                    this.#mwToken = Object.values(tokenPack.query.pages)[0].edittoken;
+                }
+                return this.#mw(params, csrf, method);
+            }
             throw new MediaWikiJSError('MEDIAWIKI_ERROR', body.error.info);
         }
-
         return body;
     }
-
-    async post(params) {
-        const { body } = await post(`${this.server + this.path}/api.php`, {
-            form: {
-                ...params,
-                format: 'json'
-            },
-            responseType: 'json',
-            cookieJar: this.jar
-        });
-
-        if (!body) {
-            throw new MediaWikiJSError('MEDIAWIKI_ERROR', 'Request did not return a body');
-        }
-
-        if (body.error) {
-            throw new MediaWikiJSError('MEDIAWIKI_ERROR', body.error.info);
-        }
-
-        return body;
+    logout() {
+        this.#mwToken = '+\\';
+        return this.#jar.removeAllCookiesSync();
+    }
+    get(params,csrf) {
+        return this.#mw(params, csrf, 'get');
     }
 
-    async send(url, params, method) {
+    post(params,csrf) {
+        return this.#mw(params, csrf, 'post');
+    }
+
+    async #discuss(url, params, method) {
         const { body } = await method(url, {
             ...params,
-            cookieJar: this.jar
+            cookieJar: this.#jar
         });
 
         if (body && body.error) {
@@ -70,15 +89,15 @@ class API {
     }
 
     postF(url, params) {
-        return this.send(url, params, post);
+        return this.#discuss(url, params, post);
     }
 
-    put(url, params) {
-        return this.send(url, params, put);
+    putF(url, params) {
+        return this.#discuss(url, params, put);
     }
 
-    delete(url, params) {
-        return this.send(url, params, del);
+    deleteF(url, params) {
+        return this.#discuss(url, params, del);
     }
 }
 

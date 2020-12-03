@@ -1,6 +1,6 @@
 const messages = {
     CANT_GET_TOKEN: () => 'Failed to get token.',
-    FAILED_LOGIN: () => 'Login was unsuccessful.',
+    FAILED_LOGIN: error => `Login was unsuccessful: ${error}`,
     LOADING_CONFIG: error => `Failed to load config: ${error}`,
     MEDIAWIKI_ERROR: error => `Error returned by API: ${error}`,
     NO_CONFIG: () => 'No configuration was provided.'

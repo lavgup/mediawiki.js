@@ -1,6 +1,5 @@
 const API = require('./API');
 const { readFileSync } = require('fs');
-const { CookieJar } = require('tough-cookie');
 const MediaWikiJSError = require('./MediaWikiJSError');
 
 /**
@@ -15,6 +14,12 @@ const MediaWikiJSError = require('./MediaWikiJSError');
  * @param {string} [options.wikiId] The wiki's ID, used for Fandom discussion support.
  */
 class MediaWikiJS {
+    #server
+    #path
+    #fandomUsername
+    #fandomPassword
+    #DISCUSSIONS_BASE_URL
+    #updateCache
     constructor(options) {
         if (typeof options === 'string') {
             let configFile,
@@ -36,70 +41,83 @@ class MediaWikiJS {
             throw new MediaWikiJSError('NO_CONFIG');
         }
 
-        this.server = options.server;
-        this.path = options.path;
-        this.botUsername = options.botUsername;
-        this.botPassword = options.botPassword;
-        this.accountUsername = options.accountUsername;
-        this.accountPassword = options.accountPassword;
+        this.#server = options.server;
+        this.#path = options.path;
+        this.#fandomUsername = options.accountUsername;
+        this.#fandomPassword = options.accountPassword;
         this.wikiId = options.wikiId;
 
-        this.jar = new CookieJar();
-        this.api = new API({
-            ...options,
-            jar: this.jar
-        });
+        
+        this.api = new API(options);
 
+        // Expose API_LIMIT publicly
         this.API_LIMIT = 5000;
-        this.DISCUSSIONS_BASE_URL = `https://services.fandom.com/discussion/${this.wikiId}`;
+        this.#DISCUSSIONS_BASE_URL = `https://services.fandom.com/discussion/${this.wikiId}`;
 
         this.cache = {};
+        this.#updateCache = info=>this.cache = {...info,...this.cache};
+        this.api.get({
+            action:"query",
+            meta:"siteinfo"
+        }).then(this.#updateCache);
 
-        // Cache user info
-        try {
-            this.login().then(() => {
-                this.whoAmI()
-                    .then(info => {
-                        this.cache = info;
-                    });
-            });
-        } catch (err) {
-            console.log(err);
-        }
+        // Auto Login Function
+        if (options.botUsername && options.botPassword)
+            try {
+                this.login(options.botUsername,options.botPassword).then(() => {
+                    this.whoAmI()
+                        .then(this.#updateCache);
+                });
+            } catch (err) {
+                console.log(err);
+            }
     }
 
     /**
      * Logs in to a wiki bot.
      * @returns {Promise<object>} The successful login object.
      */
-    async login() {
-        const initialReq = await this.api.post({
+    async login(lgname, lgpassword) {
+        const queryToken = await this.api.get({
             action: 'query',
             meta: 'tokens',
-            type: 'login',
-            format: 'json'
+            type: 'login'
         });
-
-        if (initialReq && initialReq.query && initialReq.query.tokens) {
-            return this.api.post({
+        const loginObj = lgtoken => {
+            const out = {
                 action: 'login',
-                lgname: this.botUsername,
-                lgpassword: this.botPassword,
-                lgtoken: initialReq.query.tokens.logintoken,
-                format: 'json'
-            });
-        }
-
-        throw new MediaWikiJSError('FAILED_LOGIN');
+                lgname,
+                lgpassword
+            };
+            if (lgtoken) out.lgtoken = lgtoken;
+            return out;
+        };
+        // Initial attempt
+        let actionLogin = await this.api.post(loginObj(queryToken?.query?.tokens?.logintoken));
+        // Support for MW 1.19
+        if (actionLogin?.login?.result === 'NeedToken')
+            actionLogin = await this.api.post(loginObj(actionLogin?.login?.token));
+        // Good login check
+        if (actionLogin?.login?.result === 'Success')
+            return actionLogin;
+        // Reason throwing
+        if (actionLogin?.login?.result)
+            throw new MediaWikiJSError('FAILED_LOGIN', actionLogin?.login?.result);
+        // Unspecified throwing
+        throw new MediaWikiJSError('FAILED_LOGIN', 'Unspecified error! Dumping:', JSON.stringify(actionLogin));
     }
 
     /**
-     * Logs out of a wiki bot, by removing all cookies.
+     * Logs out of a wiki bot.
+     * API removes cookies and resets mwToken.
      */
     logout() {
-        this.jar.removeAllCookies();
+        return this.api.logout()
     }
-
+    setServer(server,script){
+        this.api.setServer(server,script);
+        return this;
+    }
     /**
      * @param {object} object The object to get the first item of.
      * @returns {object[]}
@@ -180,23 +198,23 @@ class MediaWikiJS {
 
 
     /**
-     * Get's a CSRF token.
+     * Get's a CSRF token. (Depreciated, Handled by API)
      * @returns {Promise<string>}
      */
-    async getToken() {
-        const body = await this.api.get({
-            action: 'query',
-            meta: 'tokens',
-            type: 'csrf'
-        });
-
-        if (
-            !body || !body.query || !body.query.tokens
-            || !body.query.tokens.csrftoken || body.query.tokens.csrftoken === '+\\'
-        ) throw new Error('CANT_GET_TOKEN');
-
-        return body.query.tokens.csrftoken;
-    }
+//  async getToken() {
+//      const body = await this.api.get({
+//          action: 'query',
+//          meta: 'tokens',
+//          type: 'csrf'
+//      });
+//      // Null Token is fine
+//      if (
+//          !body || !body.query || !body.query.tokens
+//          || !body.query.tokens.csrftoken || body.query.tokens.csrftoken === '+\\'
+//      ) throw new Error('CANT_GET_TOKEN');
+//
+//      return body.query.tokens.csrftoken;
+//  }
 
     /**
      * Main wrapper for editing pages.
@@ -204,15 +222,12 @@ class MediaWikiJS {
      * @returns {Promise<object>}
      */
     async doEdit(params) {
-        const token = await this.getToken();
-
         return this.api.post({
             action: 'edit',
             bot: '',
             minor: params.minor || '',
             ...params,
-            token
-        });
+        },true);
     }
 
     /**
@@ -273,14 +288,11 @@ class MediaWikiJS {
      * @returns {Promise<object>}
      */
     async delete({ title, reason = '' }) {
-        const token = await this.getToken();
-
         return this.api.post({
             action: 'delete',
             title,
             reason,
-            token
-        });
+        },true);
     }
 
     /**
@@ -291,14 +303,11 @@ class MediaWikiJS {
      * @returns {Promise<*>}
      */
     async restore({ title, reason = '' }) {
-        const token = await this.getToken();
-
         return this.api.post({
             action: 'undelete',
             title,
             reason,
-            token
-        });
+        },true);
     }
 
     /**
@@ -312,8 +321,6 @@ class MediaWikiJS {
      * @returns {Promise<object>}
      */
     async protect({ title, protections, expiry, reason, cascade = false }) {
-        const token = await this.getToken();
-
         const formattedProtections = [];
         for (const [key, val] of Object.entries(protections)) {
             formattedProtections.push(`${key}=${val}`);
@@ -326,8 +333,7 @@ class MediaWikiJS {
             expiry,
             reason,
             cascade,
-            token
-        });
+        },true);
     }
 
     /**
@@ -341,8 +347,6 @@ class MediaWikiJS {
      * @returns {Promise<object>}
      */
     async block({ user, expiry, reason, autoblock = true, reblock = false }) {
-        const token = await this.getToken();
-
         return this.api.post({
             action: 'block',
             user,
@@ -350,8 +354,7 @@ class MediaWikiJS {
             reason,
             autoblock,
             reblock,
-            token
-        });
+        },true);
     }
 
     /**
@@ -361,14 +364,12 @@ class MediaWikiJS {
      * @returns {Promise<object>}
      */
     async unblock(user, reason ) {
-        const token = await this.getToken();
 
         return this.api.post({
             action: 'unblock',
             user,
             reason,
-            token
-        });
+        },true);
     }
 
     /**
@@ -381,7 +382,7 @@ class MediaWikiJS {
 
         if (typeof titles === 'string' && titles.startsWith('Category:')) {
             params.generator = 'categorymembers';
-			params.gcmtitle = titles;
+            params.gcmtitle = titles;
         } else {
             if (!Array.isArray(titles)) titles = [titles];
             if (typeof titles[0] === 'number') params.pageids = titles.join( '|' );
@@ -400,15 +401,13 @@ class MediaWikiJS {
      * @returns {Promise<object>}
      */
     async email({ user, subject, content }) {
-        const token = await this.getToken();
         return this.api.post({
             action: 'emailuser',
             target: user,
             subject,
             content,
             ccme: '',
-            token
-        });
+        },true);
     }
 
     /**
@@ -443,8 +442,8 @@ class MediaWikiJS {
     async createAccount(username, password) {
         const body = await this.api.get({
             action: 'query',
-			meta: 'tokens',
-			type: 'createaccount'
+            meta: 'tokens',
+            type: 'createaccount'
         });
 
         return this.api.post({
@@ -466,15 +465,13 @@ class MediaWikiJS {
      * @returns {Promise<object>}
      */
     async move({ from, to, reason }) {
-        const token = await this.getToken();
         return this.api.post({
             action: 'move',
             from,
             to,
             bot: '',
             reason,
-            token
-        });
+        },true);
     }
 
     /**
@@ -505,11 +502,11 @@ class MediaWikiJS {
      */
     async getImagesFromArticle({ page, onlyTitles = false, otherOptions = {} }) {
         const body = await this.api.get({
-			action: 'query',
-			prop: 'images',
-			titles: page,
+            action: 'query',
+            prop: 'images',
+            titles: page,
             ...otherOptions
-		});
+        });
 
         const article = this.getFirstItem(body.query.pages);
 
@@ -526,9 +523,9 @@ class MediaWikiJS {
     async getImageUsage(fileName, onlyTitles = false) {
         const body = await this.api.get({
            action: 'query',
-			list: 'imageusage',
-			iutitle: fileName,
-			iulimit: this.API_LIMIT
+            list: 'imageusage',
+            iutitle: fileName,
+            iulimit: this.API_LIMIT
         });
 
         if (onlyTitles) return this.getList(body.query.imageusage);
@@ -638,8 +635,8 @@ class MediaWikiJS {
 
         const body = await this.api.get({
             action: 'query',
-			meta: 'siteinfo',
-			siprop: props.join('|')
+            meta: 'siteinfo',
+            siprop: props.join('|')
         });
 
         return body.query;
@@ -693,9 +690,9 @@ class MediaWikiJS {
     async getExternalLinks(page) {
         const body = await this.api.get({
             action: 'query',
-			prop: 'extlinks',
-			titles: page,
-			ellimit: this.API_LIMIT
+            prop: 'extlinks',
+            titles: page,
+            ellimit: this.API_LIMIT
         });
 
         return this.getList(this.getFirstItem(body.query.pages).extlinks, '*');
@@ -729,8 +726,8 @@ class MediaWikiJS {
     getFandomCookies() {
         return this.api.postF('https://services.fandom.com/auth/token', {
             form: {
-                username: this.accountUsername,
-                password: this.accountPassword
+                username: this.#fandomUsername,
+                password: this.#fandomPassword
             }
         });
     }
@@ -746,7 +743,7 @@ class MediaWikiJS {
     async post({ title, content, category = this.wikiId }) {
         await this.getFandomCookies();
 
-        return this.api.postF(`${this.DISCUSSIONS_BASE_URL}/forums/${category}/threads`, {
+        return this.api.postF(`${this.#DISCUSSIONS_BASE_URL}/forums/${category}/threads`, {
             body: JSON.stringify({
                 body: title,
                 jsonModel: JSON.stringify({
@@ -789,7 +786,7 @@ class MediaWikiJS {
     async deletePost(id) {
         await this.getFandomCookies();
 
-        return this.api.put(`${this.DISCUSSIONS_BASE_URL}/threads/${id}/delete`, {
+        return this.api.putF(`${this.#DISCUSSIONS_BASE_URL}/threads/${id}/delete`, {
             headers: {
                 'Content-Type': 'application/json'
             }
@@ -804,7 +801,7 @@ class MediaWikiJS {
     async undeletePost(id) {
         await this.getFandomCookies();
 
-        return this.api.put(`${this.DISCUSSIONS_BASE_URL}/threads/${id}/undelete`, {
+        return this.api.putF(`${this.#DISCUSSIONS_BASE_URL}/threads/${id}/undelete`, {
             headers: {
                 'Content-Type': 'application/json'
             }
@@ -819,7 +816,7 @@ class MediaWikiJS {
     async lockPost(id) {
         await this.getFandomCookies();
 
-        return this.api.put(`${this.DISCUSSIONS_BASE_URL}/threads/${id}/lock`, {
+        return this.api.putF(`${this.#DISCUSSIONS_BASE_URL}/threads/${id}/lock`, {
             headers: {
                 'Content-Type': 'application/json'
             }
@@ -834,7 +831,7 @@ class MediaWikiJS {
     async unlockPost(id) {
         await this.getFandomCookies();
 
-        return this.api.delete(`${this.DISCUSSIONS_BASE_URL}/threads/${id}/lock`, {
+        return this.api.deleteF(`${this.#DISCUSSIONS_BASE_URL}/threads/${id}/lock`, {
             headers: {
                 'Content-Type': 'application/json'
             }
