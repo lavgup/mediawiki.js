@@ -1,3 +1,4 @@
 node_modules/
 pnpm-lock.yaml
 .npmignore
+package-lock.json

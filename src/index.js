@@ -55,49 +55,56 @@ class MediaWikiJS {
 
         this.cache = {};
 
-        // Cache user info
-        try {
-            this.login().then(() => {
-                this.whoAmI()
-                    .then(info => {
-                        this.cache = info;
-                    });
-            });
-        } catch (err) {
-            console.log(err);
-        }
+        // Auto Login Function
+        if (options.botUsername && options.botPassword)
+            try {
+                this.login().then(() => {
+                    this.whoAmI()
+                        .then(info => {
+                            this.cache = info;
+                        });
+                });
+            } catch (err) {
+                console.log(err);
+            }
     }
 
     /**
      * Logs in to a wiki bot.
      * @returns {Promise<object>} The successful login object.
      */
-    async login() {
-        const initialReq = await this.api.post({
+    async login(lgname, lgpassword) {
+        const queryToken = await this.api.post({
             action: 'query',
             meta: 'tokens',
-            type: 'login',
-            format: 'json'
+            type: 'login'
         });
-
-        if (initialReq && initialReq.query && initialReq.query.tokens) {
-            return this.api.post({
-                action: 'login',
-                lgname: this.botUsername,
-                lgpassword: this.botPassword,
-                lgtoken: initialReq.query.tokens.logintoken,
-                format: 'json'
-            });
-        }
-
-        throw new MediaWikiJSError('FAILED_LOGIN');
+        const loginObj = token => ({
+            action: 'login',
+            lgname,
+            lgpassword,
+            lgtoken: token
+        });
+        // Initial attempt
+        let actionLogin = await this.api.post(loginObj(queryToken?.query?.tokens?.logintoken));
+        // Support for MW 1.19
+        if (actionLogin?.login?.result === 'NeedToken')
+            actionLogin = await this.api.post(loginObj(actionLogin?.login?.token));
+        // Good login check
+        if (actionLogin?.login?.result === 'Success')
+            return actionLogin;
+        // Reason throwing
+        if (actionLogin?.login?.result)
+            throw new MediaWikiJSError('FAILED_LOGIN', actionLogin?.login?.result);
+        // Unspecified throwing
+        throw new MediaWikiJSError('FAILED_LOGIN', 'Unspecified error! Dumping:', actionLogin);
     }
 
     /**
      * Logs out of a wiki bot, by removing all cookies.
      */
     logout() {
-        this.jar.removeAllCookies();
+        return this.jar.removeAllCookiesSync();
     }
 
     /**
@@ -381,7 +388,7 @@ class MediaWikiJS {
 
         if (typeof titles === 'string' && titles.startsWith('Category:')) {
             params.generator = 'categorymembers';
-			params.gcmtitle = titles;
+            params.gcmtitle = titles;
         } else {
             if (!Array.isArray(titles)) titles = [titles];
             if (typeof titles[0] === 'number') params.pageids = titles.join( '|' );
@@ -443,8 +450,8 @@ class MediaWikiJS {
     async createAccount(username, password) {
         const body = await this.api.get({
             action: 'query',
-			meta: 'tokens',
-			type: 'createaccount'
+            meta: 'tokens',
+            type: 'createaccount'
         });
 
         return this.api.post({
@@ -505,11 +512,11 @@ class MediaWikiJS {
      */
     async getImagesFromArticle({ page, onlyTitles = false, otherOptions = {} }) {
         const body = await this.api.get({
-			action: 'query',
-			prop: 'images',
-			titles: page,
+            action: 'query',
+            prop: 'images',
+            titles: page,
             ...otherOptions
-		});
+        });
 
         const article = this.getFirstItem(body.query.pages);
 
@@ -526,9 +533,9 @@ class MediaWikiJS {
     async getImageUsage(fileName, onlyTitles = false) {
         const body = await this.api.get({
            action: 'query',
-			list: 'imageusage',
-			iutitle: fileName,
-			iulimit: this.API_LIMIT
+            list: 'imageusage',
+            iutitle: fileName,
+            iulimit: this.API_LIMIT
         });
 
         if (onlyTitles) return this.getList(body.query.imageusage);
@@ -638,8 +645,8 @@ class MediaWikiJS {
 
         const body = await this.api.get({
             action: 'query',
-			meta: 'siteinfo',
-			siprop: props.join('|')
+            meta: 'siteinfo',
+            siprop: props.join('|')
         });
 
         return body.query;
@@ -693,9 +700,9 @@ class MediaWikiJS {
     async getExternalLinks(page) {
         const body = await this.api.get({
             action: 'query',
-			prop: 'extlinks',
-			titles: page,
-			ellimit: this.API_LIMIT
+            prop: 'extlinks',
+            titles: page,
+            ellimit: this.API_LIMIT
         });
 
         return this.getList(this.getFirstItem(body.query.pages).extlinks, '*');
