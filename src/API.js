@@ -31,7 +31,8 @@ class API {
         const payloadType = (method==='post'?'form':'searchParams');
         payload[payloadType] = {
             ...params,
-            format: 'json'
+            format: 'json',
+            formatversion: 2
         };
         // Add csrf
         if (csrf) payload[payloadType].token = this.#mwToken;
