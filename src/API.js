@@ -2,24 +2,28 @@ const { get, post, put, delete: del } = require('got');
 const MediaWikiJSError = require('./MediaWikiJSError');
 
 class API {
+    #mwToken
     constructor(options) {
         this.server = options.server;
         this.path = options.path;
         this.jar = options.jar;
-
+        this.#mwToken = '+\\';
         this.wikiId = options.wikiId;
     }
-
-    async get(params) {
-        const { body } = await get(`${this.server + this.path}/api.php`, {
-            searchParams: {
-                ...params,
-                format: 'json'
-            },
+    async #mw(params, csrf, method){
+        if (typeof method !== 'string') throw Error("Critical Error in MW.js Library");
+        const payload = {
             responseType: 'json',
             cookieJar: this.jar
-        });
+        };
+        payload[(method==='post'?'json':'searchParams')] = {
+            ...params,
+            format: 'json'
+        };
+        // Add csrf
+        if (csrf) payload[(method==='post'?'json':'searchParam')].token = this.#mwToken;
 
+        const { body } = await (method==='post'?post:get)(`${this.server + this.path}/api.php`, payload);
         if (!body) {
             throw new MediaWikiJSError('MEDIAWIKI_ERROR', 'Request did not return a body');
         }
@@ -28,31 +32,23 @@ class API {
             throw new MediaWikiJSError('MEDIAWIKI_ERROR', body.error.info);
         }
 
+        if (body?.error?.code === 'badtoken') {
+            this.#mwToken = await this.get({action:'query',meta:'tokens',type: 'csrf'});
+            // Can be A Recursive Nightmare? It shouldn't be...
+            const { backup } = await this.mw(params, csrf, method);
+            return backup;
+        }
         return body;
     }
-
-    async post(params) {
-        const { body } = await post(`${this.server + this.path}/api.php`, {
-            form: {
-                ...params,
-                format: 'json'
-            },
-            responseType: 'json',
-            cookieJar: this.jar
-        });
-
-        if (!body) {
-            throw new MediaWikiJSError('MEDIAWIKI_ERROR', 'Request did not return a body');
-        }
-
-        if (body.error) {
-            throw new MediaWikiJSError('MEDIAWIKI_ERROR', body.error.info);
-        }
-
-        return body;
+    get(params,csrf) {
+        return this.#mw(params, csrf, 'get');
     }
 
-    async send(url, params, method) {
+    post(params,csrf) {
+        return this.#mw(params, csrf, 'post');
+    }
+
+    async #discuss(url, params, method) {
         const { body } = await method(url, {
             ...params,
             cookieJar: this.jar
@@ -70,15 +66,15 @@ class API {
     }
 
     postF(url, params) {
-        return this.send(url, params, post);
+        return this.#discuss(url, params, post);
     }
 
-    put(url, params) {
-        return this.send(url, params, put);
+    putF(url, params) {
+        return this.#discuss(url, params, put);
     }
 
-    delete(url, params) {
-        return this.send(url, params, del);
+    deleteF(url, params) {
+        return this.#discuss(url, params, del);
     }
 }
 
