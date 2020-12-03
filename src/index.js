@@ -52,6 +52,20 @@ class MediaWikiJS {
 
         this.API_LIMIT = 5000;
         this.DISCUSSIONS_BASE_URL = `https://services.fandom.com/discussion/${this.wikiId}`;
+
+        this.cache = {};
+
+        // Cache user info
+        try {
+            this.login().then(() => {
+                this.whoAmI()
+                    .then(info => {
+                        this.cache = info;
+                    });
+            });
+        } catch (err) {
+            console.log(err);
+        }
     }
 
     /**
