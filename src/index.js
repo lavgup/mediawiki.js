@@ -83,12 +83,15 @@ class MediaWikiJS {
             meta: 'tokens',
             type: 'login'
         });
-        const loginObj = lgtoken => ({
-            action: 'login',
-            lgname,
-            lgpassword,
-            lgtoken
-        });
+        const loginObj = lgtoken => {
+            const out = {
+                action: 'login',
+                lgname,
+                lgpassword
+            };
+            if (lgtoken) out.lgtoken = lgtoken;
+            return out;
+        };
         // Initial attempt
         let actionLogin = await this.api.post(loginObj(queryToken?.query?.tokens?.logintoken));
         // Support for MW 1.19
@@ -101,7 +104,7 @@ class MediaWikiJS {
         if (actionLogin?.login?.result)
             throw new MediaWikiJSError('FAILED_LOGIN', actionLogin?.login?.result);
         // Unspecified throwing
-        throw new MediaWikiJSError('FAILED_LOGIN', 'Unspecified error! Dumping:', actionLogin);
+        throw new MediaWikiJSError('FAILED_LOGIN', 'Unspecified error! Dumping:', JSON.stringify(actionLogin));
     }
 
     /**
