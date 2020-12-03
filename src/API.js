@@ -36,7 +36,7 @@ class API {
         // Add csrf
         if (csrf) payload[payloadType].token = this.#mwToken;
 
-        const { body } = await (method==='post'?post:get)(`${this.server + this.path}/api.php`, payload);
+        const { body } = await (method==='post'?post:get)(`${this.#server + this.#path}/api.php`, payload);
         if (!body) {
             throw new MediaWikiJSError('MEDIAWIKI_ERROR', 'Request did not return a body');
         }
@@ -44,8 +44,14 @@ class API {
         if (body.error) {
             // CSRF Catch
             if (body.error?.code === 'badtoken') {
-                const tokenPack = await this.get({action:'query',meta:'tokens',type: 'csrf'});
-                this.#mwToken = tokenPack.query.tokens.csrftoken;
+                let tokenPack = await this.get({action:'query',meta:'tokens',type: 'csrf'});
+                if (tokenPack?.query?.tokens?.csrftoken)
+                    this.#mwToken = tokenPack.query.tokens.csrftoken;
+                else {
+                    // MW 1.19 support
+                    tokenPack = await this.get({action:'query',prop:'info',intoken: 'edit',titles:'F'});
+                    this.#mwToken = Object.values(tokenPack.query.pages)[0].edittoken;
+                }
                 return this.#mw(params, csrf, method);
             }
             throw new MediaWikiJSError('MEDIAWIKI_ERROR', body.error.info);
