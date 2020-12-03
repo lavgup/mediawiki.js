@@ -6,12 +6,21 @@ const MediaWikiJSError = require('./MediaWikiJSError');
 class API {
     #mwToken
     #jar
+    #server
+    #path
     constructor(options) {
-        this.server = options.server;
-        this.path = options.path;
+        this.#server = options.server;
+        this.#path = options.path;
+        this.wikiId = options.wikiId;
+
         this.#jar = new CookieJar();
         this.#mwToken = '+\\';
-        this.wikiId = options.wikiId;
+    }
+    setServer(server,path){
+        this.#server = server;
+        this.#path = path;
+        this.logout();
+        return this;
     }
     async #mw(params, csrf, method){
         if (typeof method !== 'string') throw Error("Critical Error in MW.js Library");

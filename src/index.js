@@ -114,7 +114,10 @@ class MediaWikiJS {
     logout() {
         return this.api.logout()
     }
-
+    setServer(server,script){
+        this.api.setServer(server,script);
+        return this;
+    }
     /**
      * @param {object} object The object to get the first item of.
      * @returns {object[]}
