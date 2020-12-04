@@ -489,17 +489,23 @@ class MediaWikiJS {
      * @returns {Promise<string[] | object[]>}
      */
     async getImagesFromArticle({ page, onlyTitles = false, otherOptions = {} }) {
-        const body = await this.api.get({
-            action: 'query',
-            prop: 'images',
-            titles: page,
-            ...otherOptions
-        });
+        const images = [];
+        let imcontinue = '';
+        do {
+            const getParam = {
+                action: 'query',
+                prop: 'images',
+                titles: page,
+                ...otherOptions
+            };
+            if (imcontinue) getParam.imcontinue = imcontinue;
+            const body = await this.api.get(getParam);
+            images.push(...body.query.pages[0].images);
+            imcontinue = body?.continue?.imcontinue;
+        } while (imcontinue);
 
-        const article = this.getFirstItem(body.query.pages);
-
-        if (onlyTitles) return this.getList(article.images);
-        return article.images;
+        if (onlyTitles) return this.getList(images);
+        return images;
     }
 
     /**
