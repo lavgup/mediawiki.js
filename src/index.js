@@ -44,19 +44,20 @@ class MediaWikiJS {
         this.cacheUser = {};
 
         // Auto detect siteInfo
-        if (typeof options.server !== 'undefined' && typeof options.path !== 'undefined')
+        if (typeof options.server !== 'undefined' && typeof options.path !== 'undefined') {
             this.getSiteInfo('general').then(data => this.cacheSite = data.general);
 
-        // Auto login function
-        if (options.botUsername && options.botPassword)
-            try {
-                this.login(options.botUsername, options.botPassword);
-            } catch (err) {
-                console.log(err);
-            }
-        else
-            this.whoAmI()
-                .then(data => this.cacheUser = data);
+            // Auto login function
+            if (options.botUsername && options.botPassword)
+                try {
+                    this.login(options.botUsername, options.botPassword);
+                } catch (err) {
+                    console.log(err);
+                }
+            else
+                this.whoAmI()
+                    .then(data => this.cacheUser = data);
+        }
     }
 
     /**
