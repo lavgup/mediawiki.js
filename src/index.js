@@ -40,12 +40,11 @@ class MediaWikiJS {
         // Expose API_LIMIT publicly
         this.API_LIMIT = 5000;
 
-        this.cacheSite = {};
-        this.cacheUser = {};
+        this.cache = { site:{}, user:{} };
 
         // Auto detect siteInfo
         if (typeof options.server !== 'undefined' && typeof options.path !== 'undefined') {
-            this.getSiteInfo('general').then(data => this.cacheSite = data.general);
+            this.getSiteInfo('general').then(data => this.cache.site = data.general);
 
             // Auto login function
             if (options.botUsername && options.botPassword)
@@ -56,7 +55,7 @@ class MediaWikiJS {
                 }
             else
                 this.whoAmI()
-                    .then(data => this.cacheUser = data);
+                    .then(data => this.cache.user = data);
         }
     }
 
@@ -92,7 +91,7 @@ class MediaWikiJS {
 
         // Successful login
         if (actionLogin?.login?.result === 'Success') {
-            this.cacheUser = await this.whoAmI();
+            this.cache.user = await this.whoAmI();
             return actionLogin;
         }
 
@@ -111,7 +110,12 @@ class MediaWikiJS {
      */
     async logout() {
         this.api.logout();
-        this.cacheUser = await this.whoAmI();
+        this.cache.user = await this.whoAmI();
+    }
+    disconnect() {
+        this.api.setServer('','');
+        this.cache = {};
+        return this;
     }
 
     /**
@@ -123,7 +127,7 @@ class MediaWikiJS {
     async setServer(server, script) {
         this.api.setServer(server, script);
         this.cache = {};
-        this.cacheSite = (await this.getSiteInfo('general')).general;
+        this.cache.site = (await this.getSiteInfo('general')).general;
         return this;
     }
 
