@@ -40,23 +40,23 @@ class MediaWikiJS {
         // Expose API_LIMIT publicly
         this.API_LIMIT = 5000;
 
-        this.cacheSite = {};
-        this.cacheUser = {};
+        this.cache = { site:{}, user:{} };
 
         // Auto detect siteInfo
-        if (typeof options.server !== 'undefined' && typeof options.path !== 'undefined')
-            this.getSiteInfo('general').then(data => this.cacheSite = data.general);
+        if (typeof options.server !== 'undefined' && typeof options.path !== 'undefined') {
+            this.getSiteInfo('general').then(data => this.cache.site = data.general);
 
-        // Auto login function
-        if (options.botUsername && options.botPassword)
-            try {
-                this.login(options.botUsername, options.botPassword);
-            } catch (err) {
-                console.log(err);
-            }
-        else
-            this.whoAmI()
-                .then(data => this.cacheUser = data);
+            // Auto login function
+            if (options.botUsername && options.botPassword)
+                try {
+                    this.login(options.botUsername, options.botPassword);
+                } catch (err) {
+                    console.log(err);
+                }
+            else
+                this.whoAmI()
+                    .then(data => this.cache.user = data);
+        }
     }
 
     /**
@@ -91,7 +91,7 @@ class MediaWikiJS {
 
         // Successful login
         if (actionLogin?.login?.result === 'Success') {
-            this.cacheUser = await this.whoAmI();
+            this.cache.user = await this.whoAmI();
             return actionLogin;
         }
 
@@ -110,7 +110,12 @@ class MediaWikiJS {
      */
     async logout() {
         this.api.logout();
-        this.cacheUser = await this.whoAmI();
+        this.cache.user = await this.whoAmI();
+    }
+    disconnect() {
+        this.api.setServer('','');
+        this.cache = {};
+        return this;
     }
 
     /**
@@ -122,7 +127,7 @@ class MediaWikiJS {
     async setServer(server, script) {
         this.api.setServer(server, script);
         this.cache = {};
-        this.cacheSite = (await this.getSiteInfo('general')).general;
+        this.cache.site = (await this.getSiteInfo('general')).general;
         return this;
     }
 
@@ -481,25 +486,32 @@ class MediaWikiJS {
     }
 
     /**
-     * Gets all images from an article.
+     * Gets all images from article(s).
      * @param {object} options The options for the request.
-     * @param {string} options.page The page to get all its images from.
+     * @param {string} options.page The page to get all its images from. Can be an array.
      * @param {boolean} options.onlyTitles Whether to only list the image titles.
      * @param {object} options.otherOptions Any other options for the request.
      * @returns {Promise<string[] | object[]>}
      */
-    async getImagesFromArticle({ page, onlyTitles = false, otherOptions = {} }) {
-        const body = await this.api.get({
-            action: 'query',
-            prop: 'images',
-            titles: page,
-            ...otherOptions
-        });
+    async getImagesFromArticles({ page, onlyTitles = false, otherOptions = {} }) {
+        if (page instanceof Array) page = page.join('|');
+        const images = [];
+        let imcontinue = '';
+        do {
+            const getParam = {
+                action: 'query',
+                prop: 'images',
+                titles: page,
+                ...otherOptions
+            };
+            if (imcontinue) getParam.imcontinue = imcontinue;
+            const body = await this.api.get(getParam);
+            body.query.pages.forEach(page=>images.push(...(page.images||[])));
+            imcontinue = body?.continue?.imcontinue;
+        } while (imcontinue);
 
-        const article = this.getFirstItem(body.query.pages);
-
-        if (onlyTitles) return this.getList(article.images);
-        return article.images;
+        if (onlyTitles) return this.getList(images);
+        return images;
     }
 
     /**
