@@ -12,7 +12,7 @@ mediawiki.js is a modern wrapper for the MediaWiki API, heavily inspired by [nod
 `yarn add @sidemen19/mediawiki.js`
 
 ## Usage
-mediawiki.js uses promises with async/awai*__*t syntax instead of callbacks, like nodemw does.
+mediawiki.js uses promises with async/await syntax instead of callbacks, like nodemw does.
 
 ### Initiating the client
 mediawiki.js requires a configuration object, containing the following things;
@@ -166,6 +166,5 @@ Open an issue!
 Open a PR! Might be worth opening an issue if it's a major commit, to get the heads up from me.
 
 ## Todo
-* Cache some user data on initialisation.
 * Add a queue for all HTTP requests.
 * Write docs...even though they're pretty unnecessary looking at the code IMO, especially [index.d.ts](/src/index.d.ts). Might as well auto-generate them from the typings/JSDoc in the main file.

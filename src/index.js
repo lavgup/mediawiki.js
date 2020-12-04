@@ -119,7 +119,7 @@ class MediaWikiJS {
      * @param {string} script The path to the api.php file.
      * @returns {MediaWikiJS}
      */
-    async setServer(server, script){
+    async setServer(server, script) {
         this.api.setServer(server, script);
         this.cache = {};
         this.cacheSite = (await this.getSiteInfo('general')).general;
