@@ -481,14 +481,15 @@ class MediaWikiJS {
     }
 
     /**
-     * Gets all images from an article.
+     * Gets all images from article(s).
      * @param {object} options The options for the request.
-     * @param {string} options.page The page to get all its images from.
+     * @param {string} options.page The page to get all its images from. Can be an array.
      * @param {boolean} options.onlyTitles Whether to only list the image titles.
      * @param {object} options.otherOptions Any other options for the request.
      * @returns {Promise<string[] | object[]>}
      */
-    async getImagesFromArticle({ page, onlyTitles = false, otherOptions = {} }) {
+    async getImagesFromArticles({ page, onlyTitles = false, otherOptions = {} }) {
+        if (page instanceof Array) page = page.join('|');
         const images = [];
         let imcontinue = '';
         do {
@@ -500,7 +501,7 @@ class MediaWikiJS {
             };
             if (imcontinue) getParam.imcontinue = imcontinue;
             const body = await this.api.get(getParam);
-            images.push(...body.query.pages[0].images);
+            body.query.pages.forEach(page=>images.push(...(page.images||[])));
             imcontinue = body?.continue?.imcontinue;
         } while (imcontinue);
 
