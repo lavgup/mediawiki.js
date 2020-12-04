@@ -1,4 +1,4 @@
-const { get, post, put, delete: del } = require('got');
+const { get, post } = require('got');
 const { CookieJar } = require('tough-cookie');
 
 const MediaWikiJSError = require('./MediaWikiJSError');
@@ -26,22 +26,25 @@ class API {
     }
 
     async #mw(params, csrf, method) {
-        if (typeof method !== 'string') throw Error('Critical Error in MW.js Library');
+        if (typeof method !== 'string') throw Error('Critical error in MW.js library');
+
         const payload = {
             responseType: 'json',
             cookieJar: this.#jar
         };
 
-        const payloadType = (method==='post'?'form':'searchParams');
+        const payloadType = (method === 'post' ? 'form' : 'searchParams');
         payload[payloadType] = {
             ...params,
             format: 'json',
             formatversion: 2
         };
+
         // Add csrf
         if (csrf) payload[payloadType].token = this.#mwToken;
 
         const { body } = await (method === 'post' ? post : get)(`${this.#server + this.#path}/api.php`, payload);
+
         if (!body) {
             throw new MediaWikiJSError('MEDIAWIKI_ERROR', 'Request did not return a body');
         }
@@ -72,6 +75,7 @@ class API {
             }
             throw new MediaWikiJSError('MEDIAWIKI_ERROR', body.error.info);
         }
+
         return body;
     }
 
@@ -80,11 +84,11 @@ class API {
         return this.#jar.removeAllCookiesSync();
     }
 
-    get(params,csrf) {
+    get(params, csrf) {
         return this.#mw(params, csrf, 'get');
     }
 
-    post(params,csrf) {
+    post(params, csrf) {
         return this.#mw(params, csrf, 'post');
     }
 }
