@@ -13,7 +13,6 @@ const MediaWikiJSError = require('./MediaWikiJSError');
 class MediaWikiJS {
     #server;
     #path;
-    #updateCache;
 
     constructor(options) {
         if (typeof options === 'string') {
@@ -33,35 +32,31 @@ class MediaWikiJS {
         }
 
         if (!options) {
-            throw new MediaWikiJSError('NO_CONFIG');
+            options = {};
         }
-
-        this.#server = options.server;
-        this.#path = options.path;
 
         this.api = new API(options);
 
         // Expose API_LIMIT publicly
         this.API_LIMIT = 5000;
 
-        this.cache = {};
-        this.#updateCache = info => this.cache = { ...info,...this.cache };
+        this.cacheSite = {};
+        this.cacheUser = {};
 
-        this.api.get({
-            action: 'query',
-            meta: 'siteinfo'
-        }).then(this.#updateCache);
+        // Auto detect siteInfo
+        if (typeof options.server !== 'undefined' && typeof options.path !== 'undefined')
+            this.getSiteInfo('general').then(data => this.cacheSite = data.general);
 
         // Auto login function
         if (options.botUsername && options.botPassword)
             try {
-                this.login(options.botUsername, options.botPassword).then(() => {
-                    this.whoAmI()
-                        .then(this.#updateCache);
-                });
+                this.login(options.botUsername, options.botPassword);
             } catch (err) {
                 console.log(err);
             }
+        else
+            this.whoAmI()
+                .then(data => this.cacheUser = data);
     }
 
     /**
@@ -96,6 +91,7 @@ class MediaWikiJS {
 
         // Successful login
         if (actionLogin?.login?.result === 'Success') {
+            this.cacheUser = await this.whoAmI();
             return actionLogin;
         }
 
@@ -112,8 +108,9 @@ class MediaWikiJS {
      * Logs out of a wiki bot.
      * API removes cookies and resets mwToken.
      */
-    logout() {
-        return this.api.logout();
+    async logout() {
+        this.api.logout();
+        this.cacheUser = await this.whoAmI();
     }
 
     /**
@@ -122,8 +119,10 @@ class MediaWikiJS {
      * @param {string} script The path to the api.php file.
      * @returns {MediaWikiJS}
      */
-    setServer(server, script) {
+    async setServer(server, script){
         this.api.setServer(server, script);
+        this.cache = {};
+        this.cacheSite = (await this.getSiteInfo('general')).general;
         return this;
     }
 
