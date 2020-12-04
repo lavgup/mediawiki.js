@@ -12,13 +12,15 @@ mediawiki.js is a modern wrapper for the MediaWiki API, heavily inspired by [nod
 `yarn add @sidemen19/mediawiki.js`
 
 ## Usage
-mediawiki.js uses promises with async/await syntax instead of callbacks, like nodemw does.
+mediawiki.js uses promises with async/awai*__*t syntax instead of callbacks, like nodemw does.
 
 ### Initiating the client
 mediawiki.js requires a configuration object, containing the following things;
 * server (e.g. `https://en.wikipedia.org`)
 * path: path to `api.php` (e.g. `/w`)
     * this will resolve to `https://en.wikipedia.org/w/api.php`
+  
+The following will not be used for anywhere else other than caching some basic user info on initialisation. The login function takes a username and password parameter, to support switching accounts easily.
 * botUsername: username for when `login()` is called (optional)
 * botPassword: password for when `login()` is called (optional, see Special:BotPasswords for this)
 
@@ -76,8 +78,8 @@ const MediaWikiJS = require('@sidemen19/mediawiki.js');
 const bot = new MediaWikiJS('./config.json');
 
 (async () => {
-    // login (needs credentials in the config, of course)
-    await bot.login();
+    // login
+    await bot.login('username', 'password');
 
     // prepend content (add to start of page)
     await bot.prepend({
@@ -109,7 +111,7 @@ const MediaWikiJS = require('@sidemen19/mediawiki.js');
 const bot = new MediaWikiJS('./config.json');
 
 (async () => {
-    await bot.login();
+    await bot.login('username', 'password');
 
     await bot.delete({
         title: 'Project:Sandbox',
@@ -124,7 +126,7 @@ const MediaWikiJS = require('@sidemen19/mediawiki.js');
 const bot = new MediaWikiJS('./config.json');
 
 (async () => {
-    await bot.login();
+    await bot.login('username', 'password');
 
     await bot.block({
         user: 'Jimmy Wales',
@@ -142,7 +144,7 @@ const MediaWikiJS = require('@sidemen19/mediawiki.js');
 const bot = new MediaWikiJS('./config.json');
 
 (async () => {
-    await bot.login();
+    await bot.login('username', 'password');
 
     await bot.protect({
         title: 'Project:Rules',

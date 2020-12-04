@@ -66,19 +66,22 @@ class MediaWikiJS {
 
     /**
      * Logs in to a wiki bot.
+     * @param {string} username The bot username of the account to log in to.
+     * @param {string} password The bot password of the account to log in to.
      * @returns {Promise<object>} The successful login object.
      */
-    async login(lgname, lgpassword) {
+    async login(username, password) {
         const queryToken = await this.api.get({
             action: 'query',
             meta: 'tokens',
             type: 'login'
         });
+
         const loginObj = lgtoken => {
             const out = {
                 action: 'login',
-                lgname,
-                lgpassword
+                lgname: username,
+                lgpassword: password
             };
             if (lgtoken) out.lgtoken = lgtoken;
             return out;
@@ -87,15 +90,20 @@ class MediaWikiJS {
         let actionLogin = await this.api.post(loginObj(queryToken?.query?.tokens?.logintoken));
 
         // Support for MW 1.19
-        if (actionLogin?.login?.result === 'NeedToken')
+        if (actionLogin?.login?.result === 'NeedToken') {
             actionLogin = await this.api.post(loginObj(actionLogin?.login?.token));
-        // Good login check
-        if (actionLogin?.login?.result === 'Success')
+        }
+
+        // Successful login
+        if (actionLogin?.login?.result === 'Success') {
             return actionLogin;
+        }
+
         // Reason throwing
-        
-        if (actionLogin?.login?.result)
+        if (actionLogin?.login?.result) {
             throw new MediaWikiJSError('FAILED_LOGIN', actionLogin?.login?.result);
+        }
+
         // Unspecified throwing
         throw new MediaWikiJSError('FAILED_LOGIN', 'Unspecified error! Dumping:', JSON.stringify(actionLogin));
     }
@@ -108,10 +116,17 @@ class MediaWikiJS {
         return this.api.logout();
     }
 
-    setServer(server,script){
-        this.api.setServer(server,script);
+    /**
+     * Sets the server.
+     * @param {string} server The server of the wiki, with the HTTP/HTTPS protocol.
+     * @param {string} script The path to the api.php file.
+     * @returns {MediaWikiJS}
+     */
+    setServer(server, script) {
+        this.api.setServer(server, script);
         return this;
     }
+
     /**
      * @param {object} object The object to get the first item of.
      * @returns {object[]}

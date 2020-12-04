@@ -15,14 +15,22 @@ declare class MediaWikiJS {
     });
     /**
      * Logs in to a wiki bot.
+     * @param username - The bot username of the account to log in to.
+     * @param password - The bot password of the account to log in to.
      * @returns The successful login object.
      */
-    login(): Promise<object>;
+    login(username: string, password: string): Promise<object>;
     /**
      * Logs out of a wiki bot.
     API removes cookies and resets mwToken.
      */
     logout(): void;
+    /**
+     * Sets the server.
+     * @param server - The server of the wiki, with the HTTP/HTTPS protocol.
+     * @param script - The path to the api.php file.
+     */
+    setServer(server: string, script: string): MediaWikiJS;
     /**
      * @param object - The object to get the first item of.
      */
