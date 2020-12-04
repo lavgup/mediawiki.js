@@ -86,7 +86,7 @@ class MediaWikiJS {
             actionLogin = await this.api.post(loginObj(actionLogin?.login?.token));
         // Good login check
         if (actionLogin?.login?.result === 'Success') {
-            this.whoAmI().then(data => this.cacheUser = data);
+            this.cacheUser = await this.whoAmI();
             return actionLogin;
         }
         // Reason throwing
@@ -103,13 +103,13 @@ class MediaWikiJS {
      */
     async logout() {
         this.api.logout();
-        this.whoAmI().then(data => this.cacheUser = data);
+        this.cacheUser = await this.whoAmI();
     }
 
     async setServer(server,script){
         this.api.setServer(server,script);
         this.cache = {};
-        this.getSiteInfo('general').then(data => this.cacheSite = data.general);
+        this.cacheSite = (await this.getSiteInfo('general')).general;
         return this;
     }
     /**
