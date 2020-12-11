@@ -1,6 +1,6 @@
-const API = require('./API');
-const { readFileSync } = require('fs');
-const MediaWikiJSError = require('./MediaWikiJSError');
+import API from './API';
+import { readFileSync } from 'fs';
+import MediaWikiJSError from './MediaWikiJSError';
 
 import { Config } from './types';
 
@@ -13,18 +13,17 @@ import { Config } from './types';
  * @param {string} [options.botPassword] The bot's bot password, obtained from Special:BotPasswords.
  */
 export = class MediaWikiJS {
-    api: typeof API;
+    api: API;
     API_LIMIT: number;
     cacheSite: object;
     cacheUser: object;
 
     constructor(options: Config | string) {
         if (typeof options === 'string') {
-            let configFile,
-                configParsed;
+            let configParsed: Config;
 
             try {
-                configFile = readFileSync(options, 'utf-8');
+                const configFile = readFileSync(options, 'utf-8');
                 configParsed = JSON.parse(configFile);
             } catch (e) {
                 throw new MediaWikiJSError('LOADING_CONFIG', e.message);
@@ -39,9 +38,9 @@ export = class MediaWikiJS {
             throw new MediaWikiJSError('NO_CONFIG')
         }
 
+        // @ts-ignore
         this.api = new API(options);
 
-        // Expose API_LIMIT publicly
         this.API_LIMIT = 5000;
         this.cacheSite = {};
         this.cacheUser = {};

@@ -1,16 +1,15 @@
-import { Payload, ResObject } from './types';
-const { get, post } = require('got');
-const { CookieJar } = require('tough-cookie');
+import { Config, Payload, ResObject } from './types';
+import got from 'got';
+import { CookieJar} from 'tough-cookie';
+import MediaWikiJSError from './MediaWikiJSError';
 
-const MediaWikiJSError = require('./MediaWikiJSError');
-
-export = class API {
+export default class API {
     private mwToken: string;
-    private readonly jar: typeof CookieJar;
+    private readonly jar: CookieJar;
     server: string;
     path: string;
 
-    constructor(options: { server: string; path: string; wikiId: any; }) {
+    constructor(options: Config) {
         this.server = options.server;
         this.path = options.path;
 
@@ -25,7 +24,7 @@ export = class API {
         return this;
     }
 
-    private async mw(params: object, csrf: string | undefined, method: 'GET' | 'POST'): Promise<ResObject> {
+    private async mw(params: object, csrf: boolean | undefined, method: 'GET' | 'POST'): Promise<ResObject> {
         const payload: Payload = {
             responseType: 'json',
             cookieJar: this.jar
@@ -41,7 +40,7 @@ export = class API {
         // Add csrf
         if (csrf) payload[payloadType].token = this.mwToken;
 
-        const { body } = await (method === 'POST' ? post : get)(`${this.server + this.path}/api.php`, payload);
+        const { body }: ResObject = await (method === 'POST' ? got.post : got.get)(`${this.server + this.path}/api.php`, payload);
 
         if (!body) {
             throw new MediaWikiJSError('MEDIAWIKI_ERROR', 'Request did not return a body');
@@ -83,11 +82,11 @@ export = class API {
         return this.jar.removeAllCookiesSync();
     }
 
-    get(params: object, csrf?: string) {
+    get(params: object, csrf?: boolean) {
         return this.mw(params, csrf, 'GET');
     }
 
-    post(params: object, csrf?: string) {
+    post(params: object, csrf?: boolean) {
         return this.mw(params, csrf, 'POST');
     }
 }

@@ -5,7 +5,7 @@ const messages: {[key: string]: any} = {
     NO_CONFIG: () => 'No configuration was provided.'
 };
 
-export = class MediaWikiJSError extends Error {
+export default class MediaWikiJSError extends Error {
     code: string;
 
     constructor(key: string, ...args: string[]) {

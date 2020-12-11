@@ -6,7 +6,7 @@ export interface Config {
 }
 
 export interface Payload {
-    responseType: string;
+    responseType: 'json' | 'text' | 'buffer' | undefined;
     [key: string]: any;
 }
 
