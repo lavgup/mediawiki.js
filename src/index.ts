@@ -223,7 +223,7 @@ export = class MediaWikiJS {
             bot: '',
             minor: params.minor || '',
             ...params,
-        },true);
+        }, true);
     }
 
     /**
@@ -307,7 +307,7 @@ export = class MediaWikiJS {
             action: 'delete',
             title,
             reason,
-        },true);
+        }, true);
     }
 
     /**
@@ -322,7 +322,7 @@ export = class MediaWikiJS {
             action: 'undelete',
             title,
             reason,
-        },true);
+        }, true);
     }
 
     /**
@@ -354,7 +354,7 @@ export = class MediaWikiJS {
             expiry,
             reason,
             cascade,
-        },true);
+        }, true);
     }
 
     /**
@@ -363,14 +363,16 @@ export = class MediaWikiJS {
      * @param {string} options.user The username of the user to block.
      * @param {string} options.expiry The expiry of the block.
      * @param {string} options.reason The reason for the block.
-     * @param {boolean} options.autoblock Whether to automatically block the last used IP address, and any subsequent IP addresses they try to login from.
-     * @param {boolean} options.reblock Whether to overwrite the existing block, if the user is already blocked.
+     * @param {boolean} [options.allowUserTalk] Whether to block the user from editing their own talk page.
+     * @param {boolean} [options.autoblock] Whether to automatically block the last used IP address, and any subsequent IP addresses they try to login from.
+     * @param {boolean} [options.reblock] Whether to overwrite the existing block, if the user is already blocked.
      * @returns {Promise<object>}
      */
-    async block({ user, expiry, reason, autoblock = true, reblock = false }: {
+    async block({ user, expiry, reason, allowUserTalk = false, autoblock = true, reblock = false }: {
         user: string,
         expiry: string,
         reason: string,
+        allowUserTalk?: boolean,
         autoblock?: boolean
         reblock?: boolean
     }) {
@@ -379,6 +381,7 @@ export = class MediaWikiJS {
             user,
             expiry,
             reason,
+            allowusertalk: allowUserTalk,
             autoblock,
             reblock,
         }, true);
@@ -395,7 +398,7 @@ export = class MediaWikiJS {
             action: 'unblock',
             user,
             reason,
-        },true);
+        }, true);
     }
 
     /**
@@ -437,7 +440,7 @@ export = class MediaWikiJS {
             subject,
             content,
             ccme: '',
-        },true);
+        }, true);
     }
 
     /**
@@ -510,7 +513,7 @@ export = class MediaWikiJS {
             to,
             bot: '',
             reason,
-        },true);
+        }, true);
     }
 
     /**
