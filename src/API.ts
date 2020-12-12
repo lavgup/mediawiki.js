@@ -1,6 +1,6 @@
 import { Config, Payload, ResObject } from './types';
 import got from 'got';
-import { CookieJar} from 'tough-cookie';
+import { CookieJar } from 'tough-cookie';
 import MediaWikiJSError from './MediaWikiJSError';
 
 export default class API {
@@ -17,14 +17,14 @@ export default class API {
         this.mwToken = '+\\';
     }
 
-    setServer(server: string, path: string){
+    setServer(server: string, path: string): API {
         this.server = server;
         this.path = path;
         this.logout();
         return this;
     }
 
-    private async mw(params: object, csrf: boolean | undefined, method: 'GET' | 'POST'): Promise<ResObject> {
+    private async mw(params: Record<string, unknown>, csrf: boolean | undefined, method: 'GET' | 'POST'): Promise<ResObject> {
         const payload: Payload = {
             responseType: 'json',
             cookieJar: this.jar
@@ -51,7 +51,7 @@ export default class API {
             if (body.error?.code === 'badtoken') {
                 let tokenPack: ResObject = await this.get({
                     action: 'query',
-                    meta:'tokens',
+                    meta: 'tokens',
                     type: 'csrf'
                 });
 
@@ -65,6 +65,7 @@ export default class API {
                         intoken: 'edit',
                         titles: 'F'
                     });
+                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                     // @ts-ignore
                     this.mwToken = Object.values(tokenPack.query.pages)[0].edittoken;
                 }
@@ -77,16 +78,16 @@ export default class API {
         return body;
     }
 
-    logout() {
+    logout(): void {
         this.mwToken = '+\\';
-        return this.jar.removeAllCookiesSync();
+        this.jar.removeAllCookiesSync();
     }
 
-    get(params: object, csrf?: boolean) {
+    get(params: Record<string, unknown>, csrf?: boolean): Promise<ResObject> {
         return this.mw(params, csrf, 'GET');
     }
 
-    post(params: object, csrf?: boolean) {
+    post(params: Record<string, unknown>, csrf?: boolean): Promise<ResObject> {
         return this.mw(params, csrf, 'POST');
     }
 }

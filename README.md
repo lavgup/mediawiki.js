@@ -35,21 +35,14 @@ const bot = new MediaWikiJS({
 });
 ```
 
-#### Config file
-mediawiki.js can load the configuration from a config file, as well.
-```js
-const MediaWikiJS = require('@sidemen19/mediawiki.js');
-const bot = new MediaWikiJS('./config.json');
-```
-
 ### Using methods
-All methods are internally documented using JSDoc, so you should just be able to browse through [index.ts](src/index.ts) to know what you need to know.
+All methods are internally documented using JSDoc, so you should just be able to browse through [MediaWikiJS.ts](src/MediaWikiJS.ts) to know what you need to know.
 
 #### Examples
 ##### Getting site statistics
 ```js
 const MediaWikiJS = require('@sidemen19/mediawiki.js');
-const bot = new MediaWikiJS('./config.json');
+const bot = new MediaWikiJS({ });
 
 (async () => {
     const stats = await bot.getSiteStats();
@@ -62,7 +55,7 @@ const bot = new MediaWikiJS('./config.json');
 ##### Getting titles of all pages in a category
 ```js
 const MediaWikiJS = require('@sidemen19/mediawiki.js');
-const bot = new MediaWikiJS('./config.json');
+const bot = new MediaWikiJS({ });
 
 (async () => {
     const pages = await bot.getPagesInCategory('Stubs', true);
@@ -75,7 +68,7 @@ const bot = new MediaWikiJS('./config.json');
 ##### Editing a page
 ```js
 const MediaWikiJS = require('@sidemen19/mediawiki.js');
-const bot = new MediaWikiJS('./config.json');
+const bot = new MediaWikiJS({ });
 
 (async () => {
     // login
@@ -108,7 +101,7 @@ const bot = new MediaWikiJS('./config.json');
 ##### Deleting a page
 ```js
 const MediaWikiJS = require('@sidemen19/mediawiki.js');
-const bot = new MediaWikiJS('./config.json');
+const bot = new MediaWikiJS({ });
 
 (async () => {
     await bot.login('username', 'password');
@@ -123,7 +116,7 @@ const bot = new MediaWikiJS('./config.json');
 ##### Blocking a user
 ```js
 const MediaWikiJS = require('@sidemen19/mediawiki.js');
-const bot = new MediaWikiJS('./config.json');
+const bot = new MediaWikiJS({ });
 
 (async () => {
     await bot.login('username', 'password');
@@ -141,7 +134,7 @@ const bot = new MediaWikiJS('./config.json');
 ##### Protecting a page
 ```js
 const MediaWikiJS = require('@sidemen19/mediawiki.js');
-const bot = new MediaWikiJS('./config.json');
+const bot = new MediaWikiJS({ });
 
 (async () => {
     await bot.login('username', 'password');

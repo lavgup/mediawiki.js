@@ -1,8 +1,7 @@
 import API from './API';
-import { readFileSync } from 'fs';
 import MediaWikiJSError from './MediaWikiJSError';
 
-import { Config } from './types';
+import { Config, ResObject } from './types';
 
 /**
  * A MediaWikiJS object.
@@ -15,30 +14,14 @@ import { Config } from './types';
 export = class MediaWikiJS {
     api: API;
     API_LIMIT: number;
-    cacheSite: object;
-    cacheUser: object;
+    cacheSite: Record<string, unknown>;
+    cacheUser: Record<string, unknown>;
 
-    constructor(options: Config | string) {
-        if (typeof options === 'string') {
-            let configParsed: Config;
-
-            try {
-                const configFile = readFileSync(options, 'utf-8');
-                configParsed = JSON.parse(configFile);
-            } catch (e) {
-                throw new MediaWikiJSError('LOADING_CONFIG', e.message);
-            }
-
-            if (typeof configParsed === 'object') {
-                options = configParsed;
-            }
-        }
-
+    constructor(options: Config) {
         if (!options) {
-            throw new MediaWikiJSError('NO_CONFIG')
+            throw new MediaWikiJSError('NO_CONFIG');
         }
 
-        // @ts-ignore
         this.api = new API(options);
 
         this.API_LIMIT = 5000;
@@ -46,32 +29,29 @@ export = class MediaWikiJS {
         this.cacheUser = {};
 
         // Auto detect siteInfo
-        // @ts-ignore
         if (typeof options.server !== 'undefined' && typeof options.path !== 'undefined') {
             this.getSiteInfo('general').then(data => this.cacheSite = data.general);
         }
 
         // Auto login function
-        // @ts-ignore
-        if (options.botUsername && options.botPassword)
+        if (options.botUsername && options.botPassword) {
             try {
-                // @ts-ignore
-                this.login(options.botUsername, options.botPassword);
+                this.login(options.botUsername, options.botPassword).then(() => {
+                    this.whoAmI()
+                        .then(data => this.cacheUser = data);
+                });
             } catch (err) {
                 console.log(err);
             }
-        else
-            this.whoAmI()
-                .then(data => this.cacheUser = data);
+        }
     }
 
     /**
      * Logs in to a wiki bot.
-     * @param {string} username The bot username of the account to log in to.
-     * @param {string} password The bot password of the account to log in to.
-     * @returns {Promise<object>} The successful login object.
+     * @param username - username The bot username of the account to log in to.
+     * @param password - The bot password of the account to log in to.
      */
-    async login(username: string, password: string) {
+    async login(username: string, password: string): Promise<Record<string, unknown>> {
         const queryToken = await this.api.get({
             action: 'query',
             meta: 'tokens',
@@ -115,28 +95,27 @@ export = class MediaWikiJS {
      * Logs out of a wiki bot.
      * API removes cookies and resets mwToken.
      */
-    async logout() {
+    async logout(): Promise<void> {
         this.api.logout();
         this.cacheUser = await this.whoAmI();
     }
 
     /**
      * Sets the server.
-     * @param {string} server The server of the wiki, with the HTTP/HTTPS protocol.
-     * @param {string} script The path to the api.php file.
-     * @returns {MediaWikiJS}
+     * @param server - The server of the wiki, with the HTTP/HTTPS protocol.
+     * @param script - script The path to the api.php file.
      */
-    async setServer(server: string, script: string) {
+    async setServer(server: string, script: string): Promise<MediaWikiJS> {
         this.api.setServer(server, script);
         this.cacheSite = (await this.getSiteInfo('general')).general;
         return this;
     }
 
     /**
-     * @param {object} object The object to get the first item of.
-     * @returns {object[]}
+     * Gets the first item in an object.
+     * @param object - The object to get the first item of.
      */
-    getFirstItem(object: {[key: string]: any}) {
+    getFirstItem(object: {[key: string]: never}): {[key: string]: never} {
         const key = Object.keys(object).shift();
         if (!key) return object;
 
@@ -145,24 +124,24 @@ export = class MediaWikiJS {
 
     /**
      * Gets only the page titles of a list and formats it into an array.
-     * @param {object[]} array The array to get a list from.
-     * @param {string} property The property of the page title in each object.
-     * @returns {string[]} The list of all titles.
+     * @param array - The array to get a list from.
+     * @param property - The property of the page title in each object.
      */
-    getList(array: object[], property = 'title') {
+    getList(array: Record<string, unknown>[], property = 'title'): string[] {
         const list: string[] = [];
-        array.forEach((elem: {[key: string]: any}) => list.push(elem[property]));
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        array.forEach((elem: {[key: string]: never}) => list.push(elem[property]));
 
         return list;
     }
 
     /**
      * Gets pages in a category.
-     * @param {string} category The category to get pages of.
-     * @param {boolean} onlyTitles Whether to only list the page titles.
-     * @returns {Promise<string[] | object[]>}
+     * @param category - The category to get pages of.
+     * @param onlyTitles - Whether to only list the page titles.
      */
-    async getPagesInCategory(category: string, onlyTitles = false) {
+    async getPagesInCategory(category: string, onlyTitles = false): Promise<string[] | Record<string, unknown>[]> {
         const body = await this.api.get({
             action: 'query',
             list: 'categorymembers',
@@ -175,12 +154,11 @@ export = class MediaWikiJS {
     }
 
     /**
-     * @param {string} title The title of the page to get categories from.
-     * @param {boolean} onlyTitles Whether to only list the page titles.
-     *
-     * @returns {Promise<object[] | string[]>}
+     * Gets all categories an article is in.
+     * @param title - The title of the page to get categories from.
+     * @param onlyTitles - Whether to only list the page titles.
      */
-    async getArticleCategories(title: string, onlyTitles = false) {
+    async getArticleCategories(title: string, onlyTitles = false): Promise<string[] | Record<string, unknown>[]> {
         const body = await this.api.get({
             action: 'query',
             prop: 'categories',
@@ -195,11 +173,11 @@ export = class MediaWikiJS {
     }
 
     /**
-     * @param {string} keyword The keyword for the search.
-     * @param {boolean} onlyTitles Whether to only list the page titles.
-     * @returns {Promise<string[] | object[]>}
+     * Searches the wiki.
+     * @param keyword - The keyword for the search.
+     * @param onlyTitles - Whether to only list the page titles.
      */
-    async search(keyword: string, onlyTitles = false) {
+    async search(keyword: string, onlyTitles = false): Promise<string[] | Record<string, unknown>[]> {
         const body = await this.api.get({
             action: 'query',
             list: 'search',
@@ -214,10 +192,9 @@ export = class MediaWikiJS {
 
     /**
      * Main wrapper for editing pages.
-     * @param {Object} params Mandatory params for the edit.
-     * @returns {Promise<object>}
+     * @param params - Mandatory params for the edit.
      */
-    async doEdit(params: {[key:string]: any}) {
+    doEdit(params: {[key:string]: unknown}): Promise<Record<string, unknown>> {
         return this.api.post({
             action: 'edit',
             bot: '',
@@ -228,81 +205,77 @@ export = class MediaWikiJS {
 
     /**
      * Edits the contents of a page.
-     * @param {Object} options The options for the edit.
-     * @param {string} options.title The title of the page to edit.
-     * @param {string} options.content The content of the edit.
-     * @param {string} options.summary The summary of the edit.
-     * @param {boolean} options.minor Whether to mark the edit as minor.
-     * @returns {Promise<object>}
+     * @param options - The options for the edit.
+     * @param options.title - The title of the page to edit.
+     * @param options.content - The content of the edit.
+     * @param options.summary - The summary of the edit.
+     * @param options.minor - Whether to mark the edit as minor.
      */
     edit({ title, content, summary, minor = true }: {
         title: string,
         content: string,
         summary: string,
         minor?: boolean
-    }) {
+    }): Promise<ResObject> {
         return this.doEdit({ title: title, text: content, summary: summary, minor: minor });
     }
 
     /**
      * Appends content to a page.
-     * @param {Object} options The options for the edit.
-     * @param {string} options.title The title of the page to edit.
-     * @param {string} options.content The content of the edit.
-     * @param {string} options.summary The summary of the edit.
-     * @param {boolean} options.minor Whether to mark the edit as minor.
-     * @returns {Promise<object>}
+     * @param options - The options for the edit.
+     * @param options.title - The title of the page to edit.
+     * @param options.content - The content of the edit.
+     * @param options.summary - The summary of the edit.
+     * @param options.minor - Whether to mark the edit as minor.
      */
     prepend({ title, content, summary, minor = true }: {
         title: string,
         content: string,
         summary: string,
         minor?: boolean
-    }) {
+    }): Promise<ResObject> {
         return this.doEdit({ title: title, prependtext: content, summary: summary, minor: minor });
     }
 
     /**
      * Appends content to a page.
-     * @param {Object} options The options for the edit.
-     * @param {string} options.title The title of the page to edit.
-     * @param {string} options.content The content of the edit.
-     * @param {string} options.summary The summary of the edit.
-     * @param {boolean} options.minor Whether to mark the edit as minor.
-     * @returns {Promise<object>}
+     * @param options - The options for the edit.
+     * @param options.title - The title of the page to edit.
+     * @param options.content - The content of the edit.
+     * @param options.summary - The summary of the edit.
+     * @param options.minor - Whether to mark the edit as minor.
      */
     append({ title, content, summary, minor = true }: {
         title: string,
         content: string,
         summary: string,
         minor?: boolean
-    }) {
+    }): Promise<ResObject> {
         return this.doEdit({ title: title, appendtext: content, summary: summary, minor: minor });
     }
 
     /**
      * Undoes a revision.
-     * @param {Object} options The options for the undo.
-     * @param {string} options.title The title of the page of which revision to undo.
-     * @param {string} options.revision The revision to undo.
-     * @param {string} options.summary The summary of the edit.
+     * @param options - The options for the undo.
+     * @param options.title - The title of the page of which revision to undo.
+     * @param options.revision - The revision to undo.
+     * @param options.summary - The summary of the edit.
      */
     undo({ title, revision, summary }: {
         title: string,
         revision: string,
         summary: string
-    }) {
+    }): Promise<ResObject> {
         return this.doEdit({ title: title, undo: revision, summary: summary });
     }
 
     /**
      * Deletes a page.
-     * @param {Object} options The options for the deletion.
-     * @param {string} options.title The title of the page to delete.
-     * @param {string} options.reason The reason for deleting the page.
-     * @returns {Promise<object>}
+     * @param options - The options for the deletion.
+     * @param options.title - The title of the page to delete.
+     * @param options.reason - The reason for deleting the page.
      */
-    async delete({ title, reason = '' }: { title: string, reason?: string }) {
+    delete({ title, reason = '' }: { title: string, reason?: string }): Promise<ResObject> {
         return this.api.post({
             action: 'delete',
             title,
@@ -312,12 +285,11 @@ export = class MediaWikiJS {
 
     /**
      * Restore revisions of a deleted page.
-     * @param {Object} options The options for the deletion.
-     * @param {string} options.title The title of the page to restore.
-     * @param {string} options.reason The reason for restoring this page.
-     * @returns {Promise<*>}
+     * @param options - The options for the deletion.
+     * @param options.title - The title of the page to restore.
+     * @param options.reason - The reason for restoring this page.
      */
-    async restore({ title, reason = '' }: { title: string, reason?: string }) {
+    restore({ title, reason = '' }: { title: string, reason?: string }): Promise<ResObject> {
         return this.api.post({
             action: 'undelete',
             title,
@@ -327,21 +299,20 @@ export = class MediaWikiJS {
 
     /**
      * Change the protection level of a page.
-     * @param {Object} options The options for the protection.
-     * @param {string} options.title The title of the page to modify the protection level of.
-     * @param {{edit: string | undefined, move: string | undefined}} options.protections The protections to set the page to.
-     * @param {string | undefined} options.expiry The expiry for the protection.
-     * @param {string} options.reason The reason for modifying the page's protection level.
-     * @param {boolean} options.cascade Whether to enable cascading protection.
-     * @returns {Promise<object>}
+     * @param options - The options for the protection.
+     * @param options.title - The title of the page to modify the protection level of.
+     * @param options.protections - The protections to set the page to.
+     * @param options.expiry - The expiry for the protection.
+     * @param options.reason - The reason for modifying the page's protection level.
+     * @param options.cascade - Whether to enable cascading protection.
      */
-    async protect({ title, protections, expiry, reason, cascade = false }: {
+    protect({ title, protections, expiry, reason, cascade = false }: {
         title: string,
         protections: {edit: string | undefined, move: string | undefined},
         expiry: string,
         reason: string,
         cascade?: boolean
-    }) {
+    }): Promise<ResObject> {
         const formattedProtections = [];
         for (const [key, val] of Object.entries(protections)) {
             formattedProtections.push(`${key}=${val}`);
@@ -359,23 +330,22 @@ export = class MediaWikiJS {
 
     /**
      * Blocks a user.
-     * @param {Object} options The options for the block.
-     * @param {string} options.user The username of the user to block.
-     * @param {string} options.expiry The expiry of the block.
-     * @param {string} options.reason The reason for the block.
-     * @param {boolean} [options.allowUserTalk] Whether to block the user from editing their own talk page.
-     * @param {boolean} [options.autoblock] Whether to automatically block the last used IP address, and any subsequent IP addresses they try to login from.
-     * @param {boolean} [options.reblock] Whether to overwrite the existing block, if the user is already blocked.
-     * @returns {Promise<object>}
+     * @param options - The options for the block.
+     * @param options.user - The username of the user to block.
+     * @param options.expiry - The expiry of the block.
+     * @param options.reason - The reason for the block.
+     * @param [options.allowUserTalk] - Whether to block the user from editing their own talk page.
+     * @param [options.autoblock] - Whether to automatically block the last used IP address, and any subsequent IP addresses they try to login from.
+     * @param [options.reblock] - Whether to overwrite the existing block, if the user is already blocked.
      */
-    async block({ user, expiry, reason, allowUserTalk = false, autoblock = true, reblock = false }: {
+    block({ user, expiry, reason, allowUserTalk = false, autoblock = true, reblock = false }: {
         user: string,
         expiry: string,
         reason: string,
         allowUserTalk?: boolean,
         autoblock?: boolean
         reblock?: boolean
-    }) {
+    }): Promise<ResObject> {
         return this.api.post({
             action: 'block',
             user,
@@ -389,11 +359,10 @@ export = class MediaWikiJS {
 
     /**
      * Unblocks a user.
-     * @param {string} user The username of the user to unblock.
-     * @param {string} reason The reason for the unblock.
-     * @returns {Promise<object>}
+     * @param user - The username of the user to unblock.
+     * @param reason - The reason for the unblock.
      */
-    async unblock(user: string, reason: string) {
+    unblock(user: string, reason: string): Promise<ResObject> {
         return this.api.post({
             action: 'unblock',
             user,
@@ -403,12 +372,12 @@ export = class MediaWikiJS {
 
     /**
      * Purges the cache of a list of pages.
-     * @param {string[] | string} titles The title(s) of the pages to delete.
-     * @returns {Promise<object>}
+     * @param titles - The title(s) of the pages to delete.
      */
-    purge(titles: string[] | string) {
+    purge(titles: string[] | string): Promise<ResObject> {
         const params: {
-            action: string, generator?: string, gcmtitle?: string[] | string, pageids?: string, titles?: string
+            action: string, generator?: string, gcmtitle?: string[] | string, 
+            pageids?: string, titles?: string
         } = { action: 'purge' };
 
         if (typeof titles === 'string' && titles.startsWith('Category:')) {
@@ -425,15 +394,14 @@ export = class MediaWikiJS {
 
     /**
      * Sends an email to a user.
-     * @param {Object} options The options for the email.
-     * @param {string} options.user The user to email.
-     * @param {string} options.subject The subject of the email.
-     * @param {string} options.content The content of the email.
-     * @returns {Promise<object>}
+     * @param options - The options for the email.
+     * @param options.user - The user to email.
+     * @param options.subject - The subject of the email.
+     * @param options.content - The content of the email.
      */
-    async email({ user, subject, content }: {
+    email({ user, subject, content }: {
         user: string, subject: string, content: string
-    }) {
+    }): Promise<ResObject> {
         return this.api.post({
             action: 'emailuser',
             target: user,
@@ -445,19 +413,18 @@ export = class MediaWikiJS {
 
     /**
      * Get all edits by a user.
-     * @param {string} options The options for the request.
-     * @param {string} options.user The users to retrieve contributions for.
-     * @param {string} options.start The start timestamp to return from.
-     * @param {string} options.namespace Only list contributions in these namespaces.
-     * @param {boolean} options.onlyTitles Whether to only list the page titles.
-     * @returns {Promise<string[]>}
+     * @param options - The options for the request.
+     * @param options.user - The users to retrieve contributions for.
+     * @param options.start - The start timestamp to return from.
+     * @param options.namespace - Only list contributions in these namespaces.
+     * @param options.onlyTitles - Whether to only list the page titles.
      */
     async getUserContribs({ user, start, namespace = '', onlyTitles = false }: {
         user: string,
         start: string,
         namespace?: string,
         onlyTitles?: boolean
-    }) {
+    }): Promise<string[] | Record<string, unknown>> {
         const body = await this.api.get({
             action: 'query',
             list: 'usercontribs',
@@ -473,11 +440,10 @@ export = class MediaWikiJS {
 
     /**
      * Creates a new account.
-     * @param {string} username
-     * @param {string} password
-     * @returns {Promise<object>}
+     * @param username - The username for the new account.
+     * @param password - The password for the new account.
      */
-    async createAccount(username: string, password: string) {
+    async createAccount(username: string, password: string): Promise<ResObject> {
         const body = await this.api.get({
             action: 'query',
             meta: 'tokens',
@@ -496,17 +462,16 @@ export = class MediaWikiJS {
 
     /**
      * Moves a page.
-     * @param {Object} options The options for the move.
-     * @param {string} options.from The page title to rename.
-     * @param {string} options.to The new page title.
-     * @param {string} options.reason The reason for moving this page.
-     * @returns {Promise<object>}
+     * @param options - The options for the move.
+     * @param options.from - The page title to rename.
+     * @param options.to - The new page title.
+     * @param options.reason - The reason for moving this page.
      */
-    async move({ from, to, reason }: {
+    move({ from, to, reason }: {
         from: string,
         to: string,
         reason: string
-    }) {
+    }): Promise<ResObject> {
         return this.api.post({
             action: 'move',
             from,
@@ -518,11 +483,10 @@ export = class MediaWikiJS {
 
     /**
      * Gets all images on the wiki.
-     * @param {string} start The image title to start enumerating from.
-     * @param {boolean} onlyTitles Whether to only list the image titles.
-     * @returns {Promise<string[] | object[]>}
+     * @param start - The image title to start enumerating from.
+     * @param onlyTitles - Whether to only list the image titles.
      */
-    async getImages(start: string, onlyTitles = false) {
+    async getImages(start: string, onlyTitles = false): Promise<string[] | ResObject[]> {
         const body = await this.api.get({
             action: 'query',
             list: 'allimages',
@@ -536,17 +500,16 @@ export = class MediaWikiJS {
 
     /**
      * Gets all images from an article.
-     * @param {object} options The options for the request.
-     * @param {string} options.page The page to get all its images from.
-     * @param {boolean} options.onlyTitles Whether to only list the image titles.
-     * @param {object} options.otherOptions Any other options for the request.
-     * @returns {Promise<string[] | object[]>}
+     * @param options - The options for the request.
+     * @param options.page - The page to get all its images from.
+     * @param options.onlyTitles - Whether to only list the image titles.
+     * @param options.otherOptions - Any other options for the request.
      */
     async getImagesFromArticle({ page, onlyTitles = false, otherOptions = {} }: {
         page: string,
         onlyTitles?: boolean,
-        otherOptions?: object
-    }) {
+        otherOptions?: Record<string, unknown>
+    }): Promise<string[] | ResObject[]> {
         const body = await this.api.get({
             action: 'query',
             prop: 'images',
@@ -562,11 +525,10 @@ export = class MediaWikiJS {
 
     /**
      * Find all pages that use the given image title.
-     * @param {string} fileName Title to search.
-     * @param {boolean} onlyTitles Whether to only list the page titles.
-     * @returns {Promise<string[]>}
+     * @param fileName - Title to search.
+     * @param onlyTitles - Whether to only list the page titles.
      */
-    async getImageUsage(fileName: string, onlyTitles = false) {
+    async getImageUsage(fileName: string, onlyTitles = false): Promise<string[] | Record<string, unknown>[]> {
         const body = await this.api.get({
             action: 'query',
             list: 'imageusage',
@@ -579,10 +541,9 @@ export = class MediaWikiJS {
     }
 
     /**
-     * Get information about the current user.
-     * @returns {Promise<object>}
+     * Gets information about the current user.
      */
-    async whoAmI() {
+    async whoAmI(): Promise<ResObject> {
         const body = await this.api.get({
             action: 'query',
             meta: 'userinfo',
@@ -594,19 +555,17 @@ export = class MediaWikiJS {
 
     /**
      * Gets information about a given user.
-     * @param {string} username
-     * @returns {Promise<object>}
+     * @param username - The username of the account to look up.
      */
-    whoIs(username: string) {
+    whoIs(username: string): Promise<ResObject> {
         return this.whoAre([username]);
     }
 
     /**
      * Gets information about multiple users.
-     * @param {string[]} usernames
-     * @returns {Promise<object[]>}
+     * @param usernames - The usernames of the accounts to look up.
      */
-    async whoAre(usernames: string[]) {
+    async whoAre(usernames: string[]): Promise<ResObject> {
         const body = await this.api.get({
             action: 'query',
             list: 'users',
@@ -619,11 +578,10 @@ export = class MediaWikiJS {
 
     /**
      * Expands all templates within wikitext.
-     * @param {string} text
-     * @param {string} title
-     * @returns {Promise<string>}
+     * @param text
+     * @param title
      */
-    async expandTemplates(text: string, title: string) {
+    async expandTemplates(text: string, title: string): Promise<string> {
         const body = await this.api.get({
             action: 'expandtemplates',
             text,
@@ -636,11 +594,10 @@ export = class MediaWikiJS {
 
     /**
      * Parses content and returns parser output.
-     * @param {string} text Text to parse.
-     * @param {string} title Title of page the text belongs to.
-     * @returns {Promise<string>}
+     * @param text - Text to parse.
+     * @param title - Title of page the text belongs to.
      */
-    async parse(text: string, title: string) {
+    async parse(text: string, title: string): Promise<string> {
         const body = await this.api.get({
             action: 'parse',
             text,
@@ -654,11 +611,10 @@ export = class MediaWikiJS {
 
     /**
      * Enumerate recent changes.
-     * @param {string} start The timestamp to start enumerating from.
-     * @param {boolean} onlyTitles Whether to only list the page titles.
-     * @returns {Promise<string[] | object[]>}
+     * @param start - The timestamp to start enumerating from.
+     * @param onlyTitles - Whether to only list the page titles.
      */
-    async getRecentChanges(start = '', onlyTitles = false) {
+    async getRecentChanges(start = '', onlyTitles = false): Promise<string[] | ResObject[]> {
         const body = await this.api.get({
             action: 'query',
             list: 'recentchanges',
@@ -673,10 +629,9 @@ export = class MediaWikiJS {
 
     /**
      * Return general information about the site.
-     * @param {string[] | string} props Which information to get
-     * @returns {Promise<object>}
+     * @param props - Which information to get.
      */
-    async getSiteInfo(props: string | string[]) {
+    async getSiteInfo(props: string | string[]): Promise<ResObject> {
         if (typeof props === 'string') props = [props];
 
         const body = await this.api.get({
@@ -690,17 +645,15 @@ export = class MediaWikiJS {
 
     /**
      * Returns site statistics.
-     * @returns {Promise<object>}
      */
-    getSiteStats() {
+    getSiteStats(): Promise<ResObject> {
         return this.getSiteInfo('statistics');
     }
 
     /**
      * Gets the wiki's MediaWiki version.
-     * @returns {Promise<string>}
      */
-    async getMwVersion() {
+    async getMwVersion(): Promise<string> {
         const siteInfo = await this.getSiteInfo('general');
         let version;
 
@@ -712,11 +665,10 @@ export = class MediaWikiJS {
 
     /**
      * Returns a list of all pages from a query page.
-     * @param {string} queryPage
-     * @param {boolean} onlyTitles
-     * @returns {Promise<string[] | object[]>}
+     * @param queryPage - The query page.
+     * @param onlyTitles - Whether to only list the page titles.
      */
-    async getQueryPage(queryPage: string, onlyTitles = false) {
+    async getQueryPage(queryPage: string, onlyTitles = false): Promise<string[] | ResObject[]> {
         const body = await this.api.get({
             action: 'query',
             list: 'querypage',
@@ -730,10 +682,9 @@ export = class MediaWikiJS {
 
     /**
      * Returns all external URLs from the given page.
-     * @param {string} page The page to get its external URLs from.
-     * @returns {Promise<string[]>}
+     * @param page - The page to get its external URLs from.
      */
-    async getExternalLinks(page: string) {
+    async getExternalLinks(page: string): Promise<string[]> {
         const body = await this.api.get({
             action: 'query',
             prop: 'extlinks',
@@ -746,11 +697,10 @@ export = class MediaWikiJS {
 
     /**
      * Find all pages that link to the given page.
-     * @param {string} page Title to search.
-     * @param {boolean} onlyTitles Whether to only list the page titles.
-     * @returns {Promise<string[] | object[]>}
+     * @param page - Title to search.
+     * @param onlyTitles - Whether to only list the page titles.
      */
-    async getBackLinks(page: string, onlyTitles = false) {
+    async getBackLinks(page: string, onlyTitles = false): Promise<string[] | ResObject[]> {
         const body = await this.api.get({
             action: 'query',
             list: 'backlinks',
