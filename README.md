@@ -125,6 +125,7 @@ const bot = new MediaWikiJS({ });
         user: 'Jimmy Wales',
         expiry: '1 hour',
         reason: 'Vandalism :(',
+        allowUserTalk: false,
         autoblock: false,
         reblock: true
     });

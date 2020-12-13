@@ -16,6 +16,7 @@ export = class MediaWikiJS {
     API_LIMIT: number;
     cacheSite: Record<string, unknown>;
     cacheUser: Record<string, unknown>;
+    options: Config;
 
     constructor(options: Config) {
         if (!options) {
@@ -23,6 +24,7 @@ export = class MediaWikiJS {
         }
 
         this.api = new API(options);
+        this.options = options;
 
         this.API_LIMIT = 5000;
         this.cacheSite = {};
@@ -52,6 +54,11 @@ export = class MediaWikiJS {
      * @param password - The bot password of the account to log in to.
      */
     async login(username: string, password: string): Promise<Record<string, unknown>> {
+        if (!username && this.options.botUsername) username = this.options.botUsername;
+        if (!password && this.options.botPassword) password = this.options.botPassword;
+
+        if (!username || !password) throw new MediaWikiJSError('NO_CREDENTIALS');
+
         const queryToken = await this.api.get({
             action: 'query',
             meta: 'tokens',
@@ -88,7 +95,7 @@ export = class MediaWikiJS {
         }
 
         // Unspecified throwing
-        throw new MediaWikiJSError('FAILED_LOGIN', 'Unspecified error! Dumping:', JSON.stringify(actionLogin));
+        throw new MediaWikiJSError('FAILED_LOGIN', 'Unspecified error! Dumping: ', JSON.stringify(actionLogin));
     }
 
     /**
