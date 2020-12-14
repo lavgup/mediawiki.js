@@ -5,11 +5,10 @@ import { Config, ResObject } from './types';
 
 /**
  * A MediaWikiJS object.
- * @param {object} options The configuration options.
- * @param {string} options.server The server of the wiki.
- * @param {string} options.path The path to the api.php file.
- * @param {string} [options.botUsername] The bot's bot username, obtained from Special:BotPasswords.
- * @param {string} [options.botPassword] The bot's bot password, obtained from Special:BotPasswords.
+ * @param options - The configuration options.
+ * @param options.url - The url to the wiki's api.php file.
+ * @param [options.botUsername] - The bot's bot username, obtained from Special:BotPasswords.
+ * @param [options.botPassword] - The bot's bot password, obtained from Special:BotPasswords.
  */
 export = class MediaWikiJS {
     api: API;
@@ -50,10 +49,10 @@ export = class MediaWikiJS {
 
     /**
      * Logs in to a wiki bot.
-     * @param username - username The bot username of the account to log in to.
-     * @param password - The bot password of the account to log in to.
+     * @param [username] - username The bot username of the account to log in to.
+     * @param [password] - The bot password of the account to log in to.
      */
-    async login(username: string, password: string): Promise<Record<string, unknown>> {
+    async login(username?: string, password?: string): Promise<Record<string, unknown>> {
         if (!username && this.options.botUsername) username = this.options.botUsername;
         if (!password && this.options.botPassword) password = this.options.botPassword;
 
@@ -66,7 +65,7 @@ export = class MediaWikiJS {
         });
 
         const loginObj = (lgtoken: string) => {
-            const out: {action: string, lgname: string, lgpassword: string, lgtoken?: string} = {
+            const out: {action: string, lgname: string | undefined, lgpassword: string | undefined, lgtoken?: string} = {
                 action: 'login',
                 lgname: username,
                 lgpassword: password
