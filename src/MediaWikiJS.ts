@@ -31,7 +31,7 @@ export = class MediaWikiJS {
         this.cacheUser = {};
 
         // Auto detect siteInfo
-        if (typeof options.server !== 'undefined' && typeof options.path !== 'undefined') {
+        if (typeof options.url !== 'undefined') {
             this.getSiteInfo('general').then(data => this.cacheSite = data.general);
         }
 
@@ -109,11 +109,10 @@ export = class MediaWikiJS {
 
     /**
      * Sets the server.
-     * @param server - The server of the wiki, with the HTTP/HTTPS protocol.
-     * @param script - script The path to the api.php file.
+     * @param url - The url of the wiki's api.php file.
      */
-    async setServer(server: string, script: string): Promise<MediaWikiJS> {
-        this.api.setServer(server, script);
+    async setServer(url: string): Promise<MediaWikiJS> {
+        this.api.setServer(url);
         this.cacheSite = (await this.getSiteInfo('general')).general;
         return this;
     }
@@ -459,7 +458,7 @@ export = class MediaWikiJS {
 
         return this.api.post({
             action: 'createaccount',
-            createreturnurl: `${this.api.server}/`,
+            createreturnurl: this.api.url,
             createtoken: body.tokens.createaccounttoken,
             username: username,
             password: password,

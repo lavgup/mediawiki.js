@@ -6,20 +6,17 @@ import MediaWikiJSError from './MediaWikiJSError';
 export default class API {
     private mwToken: string;
     private readonly jar: CookieJar;
-    server: string;
-    path: string;
+    url: string;
 
     constructor(options: Config) {
-        this.server = options.server;
-        this.path = options.path;
+        this.url = options.url;
 
         this.jar = new CookieJar();
         this.mwToken = '+\\';
     }
 
-    setServer(server: string, path: string): API {
-        this.server = server;
-        this.path = path;
+    setServer(url: string): API {
+        this.url = url;
         this.logout();
         return this;
     }
@@ -40,7 +37,7 @@ export default class API {
         // Add csrf
         if (csrf) payload[payloadType].token = this.mwToken;
 
-        const { body }: ResObject = await (method === 'POST' ? got.post : got.get)(`${this.server + this.path}/api.php`, payload);
+        const { body }: ResObject = await (method === 'POST' ? got.post : got.get)(this.url, payload);
 
         if (!body) {
             throw new MediaWikiJSError('MEDIAWIKI_ERROR', 'Request did not return a body');

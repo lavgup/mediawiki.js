@@ -1,6 +1,5 @@
 export interface Config {
-    server: string,
-    path: string,
+    url: string,
     botUsername?: string,
     botPassword?: string
 }
@@ -14,8 +13,11 @@ export interface ResObject {
     [key: string]: any;
 }
 
-export type ErrorsList = 'FAILED_LOGIN' | 'LOADING_CONFIG'
-    | 'MEDIAWIKI_ERROR' | 'NO_CONFIG'| 'NO_CREDENTIALS';
+export type ErrorsList = 'FAILED_LOGIN'
+    | 'LOADING_CONFIG'
+    | 'MEDIAWIKI_ERROR'
+    | 'NO_CONFIG'
+    | 'NO_CREDENTIALS';
 
 export interface Errors {
     FAILED_LOGIN: (error: string) => string,

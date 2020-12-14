@@ -16,9 +16,7 @@ mediawiki.js uses promises with async/await syntax instead of callbacks.
 
 ### Initiating the client
 mediawiki.js requires a configuration object, containing the following things;
-* server (e.g. `https://en.wikipedia.org`)
-* path: path to `api.php` (e.g. `/w`)
-    * this will resolve to `https://en.wikipedia.org/w/api.php`
+* url: The URL of the wiki's api.php file.
   
 The following will not be used for anywhere else other than caching some basic user info on initialisation. The login function takes a username and password parameter, to support switching accounts easily.
 * botUsername: username for when `login()` is called (optional)
@@ -28,8 +26,7 @@ The following will not be used for anywhere else other than caching some basic u
 ```js
 const MediaWikiJS = require('@sidemen19/mediawiki.js');
 const bot = new MediaWikiJS({
-    server: 'https://en.wikipedia.org',
-    path: '/w',
+    url: 'https://en.wikipedia.org/w/api.php',
     botUsername: 'Username@Bot Username',
     botPassword: '',
 });
