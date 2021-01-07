@@ -8,7 +8,7 @@ const messages: Errors = {
     NO_CREDENTIALS: 'Insufficient credentials were provided. Expected username and password.'
 };
 
-export default class MediaWikiJSError extends Error {
+export class MediaWikiJSError extends Error {
     code: string;
 
     constructor(key: ErrorsList, ...args: unknown[]) {

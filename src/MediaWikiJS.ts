@@ -1,5 +1,5 @@
-import API from './API';
-import MediaWikiJSError from './MediaWikiJSError';
+import { API } from './API';
+import { MediaWikiJSError } from './MediaWikiJSError';
 
 import { Config, ResObject } from './types';
 
@@ -10,7 +10,7 @@ import { Config, ResObject } from './types';
  * @param [options.botUsername] - The bot's bot username, obtained from Special:BotPasswords.
  * @param [options.botPassword] - The bot's bot password, obtained from Special:BotPasswords.
  */
-export = class MediaWikiJS {
+export class MediaWikiJS {
     api: API;
     API_LIMIT: number;
     cacheSite: Record<string, unknown>;

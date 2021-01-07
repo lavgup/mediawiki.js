@@ -1,9 +1,9 @@
 import { Config, Payload, ResObject } from './types';
 import got from 'got';
 import { CookieJar } from 'tough-cookie';
-import MediaWikiJSError from './MediaWikiJSError';
+import { MediaWikiJSError } from './MediaWikiJSError';
 
-export default class API {
+export class API {
     private mwToken: string;
     private readonly jar: CookieJar;
     url: string;
