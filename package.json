@@ -2,8 +2,8 @@
   "name": "@sidemen19/mediawiki.js",
   "version": "4.0.0",
   "description": "A modern wrapper for the MediaWiki API.",
-  "main": "dist/MediaWikiJS.js",
-  "types": "dist/MediaWikiJS.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
