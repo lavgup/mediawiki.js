@@ -24,7 +24,7 @@ The following will not be used for anywhere else other than caching some basic u
 
 #### Example
 ```js
-const MediaWikiJS = require('@sidemen19/mediawiki.js');
+const { MediaWikiJS } = require('@sidemen19/mediawiki.js');
 const bot = new MediaWikiJS({
     url: 'https://en.wikipedia.org/w/api.php',
     botUsername: 'Username@Bot Username',
@@ -38,7 +38,7 @@ All methods are internally documented using JSDoc, so you should just be able to
 #### Examples
 ##### Getting site statistics
 ```js
-const MediaWikiJS = require('@sidemen19/mediawiki.js');
+const { MediaWikiJS } = require('@sidemen19/mediawiki.js');
 const bot = new MediaWikiJS({ });
 
 (async () => {
@@ -51,7 +51,7 @@ const bot = new MediaWikiJS({ });
 
 ##### Getting titles of all pages in a category
 ```js
-const MediaWikiJS = require('@sidemen19/mediawiki.js');
+const { MediaWikiJS } = require('@sidemen19/mediawiki.js');
 const bot = new MediaWikiJS({ });
 
 (async () => {
@@ -64,7 +64,7 @@ const bot = new MediaWikiJS({ });
 
 ##### Editing a page
 ```js
-const MediaWikiJS = require('@sidemen19/mediawiki.js');
+const { MediaWikiJS } = require('@sidemen19/mediawiki.js');
 const bot = new MediaWikiJS({ });
 
 (async () => {
@@ -97,7 +97,7 @@ const bot = new MediaWikiJS({ });
 
 ##### Deleting a page
 ```js
-const MediaWikiJS = require('@sidemen19/mediawiki.js');
+const { MediaWikiJS } = require('@sidemen19/mediawiki.js');
 const bot = new MediaWikiJS({ });
 
 (async () => {
@@ -112,7 +112,7 @@ const bot = new MediaWikiJS({ });
 
 ##### Blocking a user
 ```js
-const MediaWikiJS = require('@sidemen19/mediawiki.js');
+const { MediaWikiJS } = require('@sidemen19/mediawiki.js');
 const bot = new MediaWikiJS({ });
 
 (async () => {
@@ -131,7 +131,7 @@ const bot = new MediaWikiJS({ });
 
 ##### Protecting a page
 ```js
-const MediaWikiJS = require('@sidemen19/mediawiki.js');
+const { MediaWikiJS } = require('@sidemen19/mediawiki.js');
 const bot = new MediaWikiJS({ });
 
 (async () => {
@@ -150,11 +150,14 @@ const bot = new MediaWikiJS({ });
 })();
 ```
 
+## Running tests
+The library is tested with [Jest](https://jestjs.io), so you can run all tests by running `jest` in the root directory. Note that you will have to provide configuration for tests, including the URL to a test wiki's api.php file and a pair of BotPassword credentials. There is a sample configuration file provided.
+
 ## Support and questions
 Open an issue!
 
 ## Contributing
-Open a PR! Might be worth opening an issue if it's a major commit, to get the heads up from me.
+Open a PR! Might be worth opening an issue if it's a major change, to get the heads up from me.
 
 ## Todo
 * Add a queue for all HTTP requests.

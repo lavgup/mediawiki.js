@@ -4,3 +4,4 @@ pnpm-lock.yaml
 package-lock.json
 dist/
 .idea/
+__tests__/config.json

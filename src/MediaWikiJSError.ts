@@ -1,6 +1,6 @@
 import { Errors, ErrorsList } from './types';
 
-const messages: Errors = {
+export const ErrorMessages: Errors = {
     FAILED_LOGIN: (error: string) => `Login was unsuccessful: ${error}`,
     LOADING_CONFIG: (error: string) => `Failed to load config: ${error}`,
     MEDIAWIKI_ERROR: (error: string) => `Error returned by API: ${error}`,
@@ -12,15 +12,17 @@ export class MediaWikiJSError extends Error {
     code: string;
 
     constructor(key: ErrorsList, ...args: unknown[]) {
-        if (messages[key] === null) throw new TypeError(`Error - key '${key}' does not exist`);
+        if (ErrorMessages[key] === null) throw new TypeError(`Error - key '${key}' does not exist`);
         const message = args?.length
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
-            ? messages[key](...args)
-            : messages[key];
+            ? ErrorMessages[key](...args)
+            : ErrorMessages[key];
 
         super(message);
         this.code = key;
+
+        Object.setPrototypeOf(this, MediaWikiJSError.prototype);
     }
 
     get name(): string {

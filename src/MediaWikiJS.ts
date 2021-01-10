@@ -65,11 +65,12 @@ export class MediaWikiJS {
         });
 
         const loginObj = (lgtoken: string) => {
-            const out: {action: string, lgname: string | undefined, lgpassword: string | undefined, lgtoken?: string} = {
+            const out: { action: string, lgname: string | undefined, lgpassword: string | undefined, lgtoken?: string } = {
                 action: 'login',
                 lgname: username,
                 lgpassword: password
             };
+
             if (lgtoken) out.lgtoken = lgtoken;
             return out;
         };
