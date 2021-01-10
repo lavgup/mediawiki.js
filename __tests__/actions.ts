@@ -41,10 +41,7 @@ describe('tests action functions', () => {
                 result: expect.any(String),
                 pageid: expect.any(Number),
                 title: expect.any(String),
-                contentmodel: expect.any(String),
-                // oldrevid: expect.any(Number),
-                // newrevid: expect.any(Number),
-                // newtimestamp: expect.any(String)
+                contentmodel: expect.any(String)
             }
         });
     });
