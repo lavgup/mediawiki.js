@@ -100,11 +100,49 @@ export class MediaWikiJS {
 
     /**
      * Logs out of a wiki bot.
-     * API removes cookies and resets mwToken.
+     * Removes cookies and deletes tokens.
      */
-    async logout(): Promise<void> {
-        this.api.logout();
+    async logout(): Promise<ResObject> {
+        const token = await this.getCSRFToken();
+        const res = await this.api.post({
+            action: 'logout',
+            token
+        });
+        this.api.jar.removeAllCookiesSync();
         this.cacheUser = await this.whoAmI();
+
+        return res;
+    }
+
+    /**
+     * Gets a CSRF token.
+     */
+    async getCSRFToken(): Promise<string> {
+        let tokenPack: ResObject = await this.api.get({
+            action: 'query',
+            meta: 'tokens',
+            type: 'csrf'
+        });
+
+        let token;
+
+        if (tokenPack?.query?.tokens?.csrftoken) {
+            token = tokenPack.query.tokens.csrftoken;
+        } else {
+            // MW 1.19 support
+            tokenPack = await this.api.get({
+                action: 'query',
+                prop: 'info',
+                intoken: 'edit',
+                titles: 'F'
+            });
+
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            token = Object.values(tokenPack.query.pages)[0].edittoken;
+        }
+
+        return token;
     }
 
     /**

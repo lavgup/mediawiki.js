@@ -5,7 +5,7 @@ import { MediaWikiJSError } from './MediaWikiJSError';
 
 export class API {
     private mwToken: string;
-    private readonly jar: CookieJar;
+    jar: CookieJar;
     url: string;
 
     constructor(options: Config) {
@@ -17,7 +17,6 @@ export class API {
 
     setServer(url: string): API {
         this.url = url;
-        this.logout();
         return this;
     }
 
@@ -62,6 +61,7 @@ export class API {
                         intoken: 'edit',
                         titles: 'F'
                     });
+
                     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                     // @ts-ignore
                     this.mwToken = Object.values(tokenPack.query.pages)[0].edittoken;
@@ -73,11 +73,6 @@ export class API {
         }
 
         return body;
-    }
-
-    logout(): void {
-        this.mwToken = '+\\';
-        this.jar.removeAllCookiesSync();
     }
 
     get(params: Record<string, unknown>, csrf?: boolean): Promise<ResObject> {
