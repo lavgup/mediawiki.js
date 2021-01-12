@@ -2,22 +2,23 @@ import { Config, Payload, ResObject } from './types';
 import got from 'got';
 import { CookieJar } from 'tough-cookie';
 import { MediaWikiJSError } from './MediaWikiJSError';
+import { MediaWikiJS } from './MediaWikiJS';
 
 export class API {
     private mwToken: string;
+    private options: Config;
+    loginRetries = 0;
+    bot: MediaWikiJS;
     jar: CookieJar;
     url: string;
 
-    constructor(options: Config) {
+    constructor(bot: MediaWikiJS, options: Config) {
+        this.options = options;
         this.url = options.url;
+        this.bot = bot;
 
         this.jar = new CookieJar();
         this.mwToken = '+\\';
-    }
-
-    setServer(url: string): API {
-        this.url = url;
-        return this;
     }
 
     private async mw(params: Record<string, unknown>, csrf: boolean | undefined, method: 'GET' | 'POST'): Promise<ResObject> {
@@ -40,6 +41,24 @@ export class API {
 
         if (!body) {
             throw new MediaWikiJSError('MEDIAWIKI_ERROR', 'Request did not return a body');
+        }
+
+        // Handle session loss
+        if (body.login?.result === 'Aborted') {
+            if (body.login.reason === 'Cannot log in when using MediaWiki\\Session\\BotPasswordSessionProvider sessions.') return {
+                login: {
+                    result: 'Success',
+                    preventOverwrite: true
+                }
+            };
+
+            if (this.loginRetries >= 1) {
+                throw new MediaWikiJSError('FAILED_LOGIN', body.login.reason);
+            }
+
+            this.loginRetries++;
+            await this.bot.login(this.options.botUsername, this.options.botPassword);
+            return this.mw(params, csrf, method);
         }
 
         if (body.error) {
@@ -69,6 +88,7 @@ export class API {
 
                 return this.mw(params, csrf, method);
             }
+
             throw new MediaWikiJSError('MEDIAWIKI_ERROR', body.error.info);
         }
 

@@ -13,8 +13,6 @@ import { Config, ResObject } from './types';
 export class MediaWikiJS {
     api: API;
     API_LIMIT: number;
-    cacheSite: Record<string, unknown>;
-    cacheUser: Record<string, unknown>;
     options: Config;
 
     constructor(options: Config) {
@@ -22,29 +20,10 @@ export class MediaWikiJS {
             throw new MediaWikiJSError('NO_CONFIG');
         }
 
-        this.api = new API(options);
+        this.api = new API(this, options);
         this.options = options;
 
         this.API_LIMIT = 5000;
-        this.cacheSite = {};
-        this.cacheUser = {};
-
-        // Auto detect siteInfo
-        if (typeof options.url !== 'undefined') {
-            this.getSiteInfo('general').then(data => this.cacheSite = data.general);
-        }
-
-        // Auto login function
-        if (options.botUsername && options.botPassword) {
-            try {
-                this.login(options.botUsername, options.botPassword).then(() => {
-                    this.whoAmI()
-                        .then(data => this.cacheUser = data);
-                });
-            } catch (err) {
-                console.log(err);
-            }
-        }
     }
 
     /**
@@ -53,6 +32,9 @@ export class MediaWikiJS {
      * @param [password] - The bot password of the account to log in to.
      */
     async login(username?: string, password?: string): Promise<Record<string, unknown>> {
+        if (username && !this.options.botUsername) this.options.botUsername = username;
+        if (password && !this.options.botPassword) this.options.botPassword = password;
+
         if (!username && this.options.botUsername) username = this.options.botUsername;
         if (!password && this.options.botPassword) password = this.options.botPassword;
 
@@ -79,20 +61,13 @@ export class MediaWikiJS {
         let actionLogin = await this.api.post(loginObj(queryToken?.query?.tokens?.logintoken));
 
         // Support for MW 1.19
-        if (actionLogin?.login?.result === 'NeedToken') {
-            actionLogin = await this.api.post(loginObj(actionLogin?.login?.token));
-        }
+        if (actionLogin?.login?.result === 'NeedToken') actionLogin = await this.api.post(loginObj(actionLogin?.login?.token));
 
         // Successful login
-        if (actionLogin?.login?.result === 'Success') {
-            this.cacheUser = await this.whoAmI();
-            return actionLogin;
-        }
+        if (actionLogin?.login?.result === 'Success') return actionLogin;
 
         // Reason throwing
-        if (actionLogin?.login?.result) {
-            throw new MediaWikiJSError('FAILED_LOGIN', actionLogin?.login?.result);
-        }
+        if (actionLogin?.login?.result) throw new MediaWikiJSError('FAILED_LOGIN', actionLogin?.login?.result);
 
         // Unspecified throwing
         throw new MediaWikiJSError('FAILED_LOGIN', 'Unspecified error! Dumping: ', JSON.stringify(actionLogin));
@@ -109,7 +84,6 @@ export class MediaWikiJS {
             token
         });
         this.api.jar.removeAllCookiesSync();
-        this.cacheUser = await this.whoAmI();
 
         return res;
     }
@@ -143,16 +117,6 @@ export class MediaWikiJS {
         }
 
         return token;
-    }
-
-    /**
-     * Sets the server.
-     * @param url - The url of the wiki's api.php file.
-     */
-    async setServer(url: string): Promise<MediaWikiJS> {
-        this.api.setServer(url);
-        this.cacheSite = (await this.getSiteInfo('general')).general;
-        return this;
     }
 
     /**
