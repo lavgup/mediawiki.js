@@ -3,13 +3,13 @@ mediawiki.js is a modern wrapper for the MediaWiki API, heavily inspired by [nod
 
 ## Installation
 #### With pnpm (recommended)
-`pnpm add @sidemen19/mediawiki.js`
+`pnpm add @lavgup/mediawiki.js`
 
 #### With npm
-`npm install @sidemen19/mediawiki.js`
+`npm install @lavgup/mediawiki.js`
 
 #### With yarn
-`yarn add @sidemen19/mediawiki.js`
+`yarn add @lavgup/mediawiki.js`
 
 ## Usage
 mediawiki.js uses promises with async/await syntax instead of callbacks.
@@ -24,7 +24,7 @@ The following will not be used for anywhere else other than caching some basic u
 
 #### Example
 ```js
-const { MediaWikiJS } = require('@sidemen19/mediawiki.js');
+const { MediaWikiJS } = require('@lavgup/mediawiki.js');
 const bot = new MediaWikiJS({
     url: 'https://en.wikipedia.org/w/api.php',
     botUsername: 'Username@Bot Username',
@@ -38,7 +38,7 @@ All methods are internally documented using JSDoc, so you should just be able to
 #### Examples
 ##### Getting site statistics
 ```js
-const { MediaWikiJS } = require('@sidemen19/mediawiki.js');
+const { MediaWikiJS } = require('@lavgup/mediawiki.js');
 const bot = new MediaWikiJS({ });
 
 (async () => {
@@ -51,7 +51,7 @@ const bot = new MediaWikiJS({ });
 
 ##### Getting titles of all pages in a category
 ```js
-const { MediaWikiJS } = require('@sidemen19/mediawiki.js');
+const { MediaWikiJS } = require('@lavgup/mediawiki.js');
 const bot = new MediaWikiJS({ });
 
 (async () => {
@@ -64,7 +64,7 @@ const bot = new MediaWikiJS({ });
 
 ##### Editing a page
 ```js
-const { MediaWikiJS } = require('@sidemen19/mediawiki.js');
+const { MediaWikiJS } = require('@lavgup/mediawiki.js');
 const bot = new MediaWikiJS({ });
 
 (async () => {
@@ -97,7 +97,7 @@ const bot = new MediaWikiJS({ });
 
 ##### Deleting a page
 ```js
-const { MediaWikiJS } = require('@sidemen19/mediawiki.js');
+const { MediaWikiJS } = require('@lavgup/mediawiki.js');
 const bot = new MediaWikiJS({ });
 
 (async () => {
@@ -112,7 +112,7 @@ const bot = new MediaWikiJS({ });
 
 ##### Blocking a user
 ```js
-const { MediaWikiJS } = require('@sidemen19/mediawiki.js');
+const { MediaWikiJS } = require('@lavgup/mediawiki.js');
 const bot = new MediaWikiJS({ });
 
 (async () => {
@@ -131,7 +131,7 @@ const bot = new MediaWikiJS({ });
 
 ##### Protecting a page
 ```js
-const { MediaWikiJS } = require('@sidemen19/mediawiki.js');
+const { MediaWikiJS } = require('@lavgup/mediawiki.js');
 const bot = new MediaWikiJS({ });
 
 (async () => {

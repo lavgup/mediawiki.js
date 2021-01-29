@@ -33,7 +33,7 @@ describe('tests action functions', () => {
     test('edit function', async () => {
         expect(await bot.edit({
             title: 'Project:Sandbox/mw.js',
-            content: 'Testing [https://github.com/Sidemen19/mediawiki.js mediawiki.js] library!',
+            content: 'Testing [https://github.com/lavgup/mediawiki.js mediawiki.js] library!',
             minor: false,
             summary: 'Testing mediawiki.js library'
         })).toMatchObject({
