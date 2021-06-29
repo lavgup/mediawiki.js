@@ -133,6 +133,9 @@ await bot.protect({
 in the root directory. Note that you will have to provide configuration for tests, including the URL to a test wiki's
 api.php file and a pair of BotPassword credentials. There is a sample configuration file provided.
 
+## Example application
+* [Wiki Utilities](https://github.com/lavgup/wiki-utilities) - Discord bot for taking administrative actions on a wiki through message commands.
+
 ## Support and questions
 Open an issue!
 Join my [Discord server](https://discord.gg/3hsdQhYVKT) for a quicker response.
