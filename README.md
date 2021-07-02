@@ -54,7 +54,7 @@ console.log(stats);
 
 ##### Getting titles of all pages in a category
 ```js
-    const pages = await bot.getPagesInCategory('Stubs', true);
+const pages = await bot.getPagesInCategory('Stubs', true);
 
 console.log(pages);
 // => [ ... ]
@@ -62,7 +62,7 @@ console.log(pages);
 
 ##### Editing a page
 ```js
-    // login
+// login
 await bot.login('username', 'password');
 
 // prepend content (add to start of page)
